@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Advanced Touch Reward Function for RLGym - A reward function that provides advanced ball touch rewards">
+    <title>Rocket League Bot Training | Advanced Touch Reward</title>
+    <link rel="icon" type="image/png" href="https://www.freepnglogos.com/uploads/rocket-league-logo-png/rocket-league-logo-png-1.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <script>
+        // Add copy button to all code blocks
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add copy button to each code block
+            document.querySelectorAll('pre code').forEach(function(codeBlock) {
+                const button = document.createElement('button');
+                button.className = 'copy-button';
+                button.type = 'button';
+                button.title = 'Copy to clipboard';
+                button.innerHTML = '<i class="far fa-copy"></i>';
+                
+                // Create container for the button
+                const container = document.createElement('div');
+                container.className = 'code-header';
+                container.style.display = 'flex';
+                container.style.justifyContent = 'flex-end';
+                
+                // Insert the button before the pre element
+                const pre = codeBlock.parentNode;
+                if (pre.parentNode) {
+                    pre.parentNode.insertBefore(container, pre);
+                    container.appendChild(button);
+                }
+
+                button.addEventListener('click', function() {
+                    // Create a temporary textarea to copy from
+                    const textarea = document.createElement('textarea');
+                    textarea.value = codeBlock.textContent;
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    
+                    try {
+                        // Copy the text
+                        document.execCommand('copy');
+                        button.innerHTML = '<i class="fas fa-check"></i>';
+                        button.classList.add('copied');
+                        
+                        // Reset button after 2 seconds
+                        setTimeout(function() {
+                            button.innerHTML = '<i class="far fa-copy"></i>';
+                            button.classList.remove('copied');
+                        }, 2000);
+                    } catch (err) {
+                        console.error('Failed to copy text: ', err);
+                    }
+                    
+                    // Clean up
+                    document.body.removeChild(textarea);
+                });
+            });
+        });
+    </script>
+    <style>
+        .training-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: rgba(26, 32, 44, 0.9);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .training-background {
+            background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.8)), 
+                        url('https://images.unsplash.com/photo-1569505840673-3f5b24b6c1d9?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80');
+            background-size: cover;
+            background-position: center;
+            padding: 4rem 0;
+            margin-top: -1rem;
+        }
+        
+        .training-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 2rem;
+            background: rgba(26, 32, 44, 0.8);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .training-header h1 {
+            color: #ffffff;
+            margin-bottom: 0.5rem;
+        }
+        
+        .training-header img {
+            max-width: 100%;
+            border-radius: 8px;
+            margin: 1rem 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            max-height: 400px;
+            object-fit: contain;
+        }
+        
+        .training-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 1rem 0;
+            justify-content: center;
+        }
+        
+        .tag {
+            background: #f0f4f8;
+            color: #2d3748;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            display: inline-block;
+            margin: 0.25rem;
+        }
+        
+        .copy-button {
+            background: #2c5282;
+            color: white;
+            border: 1px solid #2b6cb0;
+            padding: 0.4rem 0.8rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            margin: 0.5rem 0;
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            z-index: 10;
+        }
+        
+        .copy-button:hover {
+            background: #3182ce;
+        }
+        
+        .copy-button.copied {
+            background: #48bb78;
+        }
+        
+        .code-header {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: -2rem;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .code-block {
+            position: relative;
+            background: #1a202c;
+            color: #e2e8f0;
+            padding: 1.5rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+            font-family: 'Fira Code', 'Courier New', monospace;
+            border: 1px solid #2d3748;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        pre {
+            margin: 0;
+        }
+        
+        code {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.95rem;
+        }
+        
+        .training-section h2 {
+            color: #63b3ed;
+            margin: 2.5rem 0 1.5rem 0;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #2c5282;
+            font-weight: 600;
+            font-size: 1.75rem;
+        }
+        
+        .training-section h3 {
+            color: #90cdf4;
+            margin: 2rem 0 1rem 0;
+            font-weight: 500;
+            font-size: 1.4rem;
+        }
+        
+        .training-section p, .training-section li {
+            color: #ffffff;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+        
+        .training-section ul, .training-section ol {
+            margin-bottom: 1.5rem;
+            padding-left: 1.8rem;
+        }
+        
+        .training-section ul li::marker {
+            color: #63b3ed;
+        }
+        
+        .training-section ol li::marker {
+            color: #63b3ed;
+            font-weight: bold;
+        }
+        
+        .training-section li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .parameters-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            background: #1a202c;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .parameters-table th, 
+        .parameters-table td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid #2d3748;
+        }
+        
+        .parameters-table th {
+            background: #2d3748;
+            color: #90cdf4;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.05em;
+        }
+        
+        .parameters-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .parameters-table code {
+            background: rgba(45, 55, 72, 0.5);
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            color: #f6ad55;
+        }
+        
+        /* New component styles */
+        .reward-component {
+            background: rgba(26, 32, 44, 0.8);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .reward-component h4 {
+            color: #63b3ed;
+            margin-top: 0;
+            border-bottom: 1px solid rgba(99, 179, 237, 0.3);
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .code-snippet {
+            background: #1e1e1e;
+            border-radius: 6px;
+            padding: 1rem;
+            margin: 1rem 0;
+            overflow-x: auto;
+            border: 1px solid #2d3748;
+        }
+        
+        .code-snippet pre {
+            margin: 0;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        
+        .state-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            background: #1a202c;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .state-table th, 
+        .state-table td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid #2d3748;
+        }
+        
+        .state-table th {
+            background: #2d3748;
+            color: #90cdf4;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.05em;
+        }
+        
+        .state-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .parameters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin: 1.5rem 0;
+        }
+        
+        .parameter {
+            background: rgba(26, 32, 44, 0.8);
+            border-radius: 8px;
+            padding: 1.25rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .parameter h4 {
+            color: #63b3ed;
+            margin-top: 0;
+            margin-bottom: 0.75rem;
+            font-size: 1rem;
+        }
+        
+        .parameter p {
+            margin: 0.5rem 0 0;
+            color: #cbd5e0;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <header class="main-header">
+        <div class="container">
+            <nav class="navbar">
+                <a href="../index.html" class="logo">
+                    <img src="https://www.freepnglogos.com/uploads/rocket-league-logo-png/rocket-league-logo-png-1.png" alt="Rocket League Logo" class="rl-logo">
+                    <span>RL Bot Training</span>
+                </a>
+                <button class="hamburger" aria-label="Toggle navigation menu" aria-expanded="false">
+                    <span class="hamburger-box">
+                        <span class="hamburger-inner"></span>
+                    </span>
+                </button>
+                <ul class="nav-links">
+                    <li><a href="../index.html">Home</a></li>
+                    <li><a href="../training-packs.html">Training Codes</a></li>
+                    <li><a href="../bot-tools.html">Bot Tools</a></li>
+                    <li><a href="../tutorials.html">Tutorials</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <div class="training-background">
+        <section class="section">
+            <div class="container">
+                <a href="../training-packs.html" class="back-button">
+                    <i class="fas fa-arrow-left"></i> Back to Training Packs
+                </a>
+                
+                <div class="training-content">
+                    <div class="training-header">
+                        <h1>Advanced Touch Reward Function</h1>
+                        <p>A sophisticated reward function that provides advanced ball touch rewards with configurable parameters</p>
+                        
+                        <div class="training-tags">
+                            <span class="tag">RLGym</span>
+                            <span class="tag">Reward Function</span>
+                            <span class="tag">Advanced Mechanics</span>
+                            <span class="tag">Python</span>
+                        </div>
+                    </div>
+
+                    <div class="training-section">
+                        <h2>About This Reward Function</h2>
+                        <p>This reward function is designed to provide more sophisticated ball touch rewards in Rocket League. It offers several advantages over basic touch rewards:</p>
+                        <ul>
+                            <li>Configurable reward amounts for touches and acceleration</li>
+                            <li>Option to count multiple touches or just the first touch</li>
+                            <li>Normalized acceleration rewards based on maximum ball speed</li>
+                        </ul>
+                    </div>
+
+                    <div class="code-section">
+                        <div class="code-block">
+                            <pre><code class="language-python">
+
+from typing import List, Dict, Any
+
+from typing import List, Dict, Any
+
+import numpy as np
+from rlgym.api import RewardFunction, AgentID
+from rlgym.rocket_league.api import GameState
+from rlgym.rocket_league.common_values import BALL_MAX_SPEED
+
+class AdvancedTouchReward(RewardFunction[AgentID, GameState, float]):
+    def __init__(self, touch_reward: float = 1.0, acceleration_reward: float = 0.0, use_touch_count: bool = True):
+        self.touch_reward = touch_reward
+        self.acceleration_reward = acceleration_reward
+        self.use_touch_count = use_touch_count
+
+        self.prev_ball = None
+
+    def reset(self, agents: List[AgentID], initial_state: GameState, shared_info: Dict[str, Any]) -> None:
+        self.prev_ball = initial_state.ball
+
+    def get_rewards(self, agents: List[AgentID], state: GameState, is_terminated: Dict[AgentID, bool],
+                    is_truncated: Dict[AgentID, bool], shared_info: Dict[str, Any]) -> Dict[AgentID, float]:
+        rewards = {agent: 0 for agent in agents}
+        ball = state.ball
+        for agent in agents:
+            touches = state.cars[agent].ball_touches
+
+            if touches > 0:
+                if not self.use_touch_count:
+                    touches = 1
+                acceleration = np.linalg.norm(ball.linear_velocity - self.prev_ball.linear_velocity) / BALL_MAX_SPEED
+                rewards[agent] += self.touch_reward * touches
+                rewards[agent] += acceleration * self.acceleration_reward
+
+        self.prev_ball = ball
+
+        return rewards</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="training-section">
+                        <h2>How the Reward System Works</h2>
+                        <p>The <code>AdvancedTouchReward</code> class is a custom reward function for the RLGym framework, designed to train reinforcement learning agents in Rocket League. It rewards agents for ball touches, with an optional bonus for how much the touch accelerates the ball, encouraging more effective and strategic gameplay.</p>
+                        
+                        <h3>Core Functionality</h3>
+                        <p>This reward system is built around two primary components that work together to shape agent behavior:</p>
+                        
+                        <div class="reward-component">
+                            <h4>1. Touch-Based Rewards</h4>
+                            <p>The system provides immediate feedback when an agent interacts with the ball:</p>
+                            <ul>
+                                <li><strong>Base Touch Reward</strong>: A fixed reward for each ball touch, configurable via <code>touch_reward</code> parameter</li>
+                                <li><strong>Multi-Touch Support</strong>: When <code>use_touch_count</code> is enabled, agents are rewarded for each individual touch in rapid succession</li>
+                                <li><strong>Consistent Feedback</strong>: Rewards are delivered immediately upon touch detection</li>
+                            </ul>
+                            
+                            <div class="code-snippet">
+                                <pre><code># Example: Simple touch reward calculation
+if touches > 0:
+    reward = touch_reward * (touches if use_touch_count else 1)</code></pre>
+                            </div>
+                        </div>
+                        
+                        <div class="reward-component">
+                            <h4>2. Acceleration-Based Rewards</h4>
+                            <p>Beyond simple touch detection, the system rewards the quality of ball interactions:</p>
+                            <ul>
+                                <li><strong>Velocity Change</strong>: Measures how much the ball's speed and direction change after a touch</li>
+                                <li><strong>Normalization</strong>: Acceleration is normalized by <code>BALL_MAX_SPEED</code> for consistent scaling</li>
+                                <li><strong>Configurable Weight</strong>: The <code>acceleration_reward</code> parameter controls the impact of this component</li>
+                            </ul>
+                            
+                            <div class="code-snippet">
+                                <pre><code># Example: Acceleration reward calculation
+acceleration = np.linalg.norm(ball.linear_velocity - prev_ball.linear_velocity) / BALL_MAX_SPEED
+reward += acceleration * acceleration_reward</code></pre>
+                            </div>
+                        </div>
+                        
+                        <h3>State Management</h3>
+                        <p>The class maintains important state between frames to enable accurate reward calculations:</p>
+                        
+                        <table class="state-table">
+                            <tr>
+                                <th>State Variable</th>
+                                <th>Purpose</th>
+                                <th>Update Frequency</th>
+                            </tr>
+                            <tr>
+                                <td><code>prev_ball</code></td>
+                                <td>Stores the ball's previous state (position, velocity)</td>
+                                <td>Updated every frame</td>
+                            </tr>
+                            <tr>
+                                <td><code>ball_touches</code></td>
+                                <td>Tracks the number of touches in the current step</td>
+                                <td>Reset each step, incremented on touch</td>
+                            </tr>
+                        </table>
+                        
+                        <h3>Key Parameters</h3>
+                        <div class="parameters-grid">
+                            <div class="parameter">
+                                <h4><code>touch_reward</code> (float, default: 1.0)</h4>
+                                <p>Base reward value for each ball touch. This is the foundation of the reward signal.</p>
+                            </div>
+                            
+                            <div class="parameter">
+                                <h4><code>acceleration_reward</code> (float, default: 0.0)</h4>
+                                <p>Multiplier for the acceleration-based reward. Set to 0 to disable this feature.</p>
+                            </div>
+                            
+                            <div class="parameter">
+                                <h4><code>use_touch_count</code> (bool, default: True)</h4>
+                                <p>When True, rewards are multiplied by the number of touches in the current step. When False, only one touch per step is counted.</p>
+                            </div>
+                        </div>
+                        
+                        <h3>Training Benefits</h3>
+                        <p>This reward function promotes several desirable behaviors in trained agents:</p>
+                        <ul>
+                            <li><strong>Active Play</strong>: Encourages agents to actively engage with the ball</li>
+                            <li><strong>Purposeful Touches</strong>: Rewards more powerful and strategic ball interactions</li>
+                            <li><strong>Ball Control</strong>: Promotes maintaining possession through multiple touches</li>
+                            <li><strong>Game Awareness</strong>: Helps agents understand the relationship between their actions and ball physics</li>
+                        </ul>
+                        </ul>
+                        
+                        <h3>Usage Example</h3>
+                        <div class="code-section">
+                            <div class="code-block">
+                                <pre><code class="language-python">from rlgym.utils.reward_functions import CombinedReward
+from rlgym_tools.extra_rewards import EventReward
+
+def get_reward():
+    return CombinedReward(
+        (AdvancedTouchReward(touch_reward=1.0, acceleration_reward=0.5, use_touch_count=True), 1.0),
+        (EventReward(goal=10, concede=-10), 1.0)
+    )</code></pre>
+                            </div>
+                        </div>
+                        
+                        <h3>Tips for Training</h3>
+                        <ul>
+                            <li>Start with a higher <code>touch_reward</code> to encourage basic ball interaction</li>
+                            <li>Gradually increase <code>acceleration_reward</code> to encourage more powerful hits</li>
+                            <li>Set <code>use_touch_count</code> to <code>False</code> if you want to reward the first touch more than multiple touches</li>
+                            <li>Combine with other reward functions for more complex behaviors</li>
+                        </ul>
+                    </div>
+                    <div class="training-section">
+                        <h3>Parameters Reference</h3>
+                        <table class="parameters-table">
+                            <thead>
+                                <tr>
+                                    <th>Parameter</th>
+                                    <th>Type</th>
+                                    <th>Default</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>touch_reward</code></td>
+                                    <td>float</td>
+                                    <td>1.0</td>
+                                    <td>Base reward value given for each ball touch</td>
+                                </tr>
+                                <tr>
+                                    <td><code>acceleration_reward</code></td>
+                                    <td>float</td>
+                                    <td>0.0</td>
+                                    <td>Multiplier for the reward based on ball acceleration</td>
+                                </tr>
+                                <tr>
+                                    <td><code>use_touch_count</code></td>
+                                    <td>bool</td>
+                                    <td>True</td>
+                                    <td>Whether to count multiple touches per step or just the first touch</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <footer class="main-footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <div class="social-links">
+                        <a href="https://github.com/RLBot/RLBot" target="_blank" rel="noopener noreferrer" aria-label="GitHub"><i class="fab fa-github"></i> RLBot GitHub</a>
+                        <a href="https://github.com/dxkku" target="_blank" rel="noopener noreferrer" aria-label="GitHub"><i class="fab fa-github"></i> My GitHub</a>
+                        <a href="https://discord.gg/fkG77fPmCd" target="_blank" rel="noopener noreferrer" aria-label="Discord"><i class="fab fa-discord"></i> Discord</a>
+                        <a href="https://www.reddit.com/r/RocketLeagueBots/" target="_blank" rel="noopener noreferrer" aria-label="Reddit"><i class="fab fa-reddit"></i> Reddit</a>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="../index.html">Home</a></li>
+                        <li><a href="../training-packs.html">Training Codes</a></li>
+                        <li><a href="../bot-tools.html">Bot Tools</a></li>
+                        <li><a href="../tutorials.html">Tutorials</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Rocket League Bot Training. Not affiliated with Psyonix or Epic Games.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../script.js"></script>
+</body>
+</html>

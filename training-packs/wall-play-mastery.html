@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Wall Play Mastery - Master wall hits, reads, and passes">
+    <title>Rocket League Bot Training | Wall Play Mastery</title>
+    <link rel="icon" type="image/png" href="https://www.freepnglogos.com/uploads/rocket-league-logo-png/rocket-league-logo-png-1.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../style.css">
+    <style>
+        .training-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        .training-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .training-header img {
+            max-width: 100%;
+            border-radius: 8px;
+            margin: 1rem 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            max-height: 400px;
+            object-fit: cover;
+        }
+        .training-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 1rem 0;
+            justify-content: center;
+        }
+        .tag {
+            background: #f0f4f8;
+            color: #2d3748;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            display: inline-block;
+            margin: 0.25rem;
+        }
+        .code-block {
+            background: #f8fafc;
+            color: #2d3748;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 1.5rem 0;
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            border: 1px solid #e2e8f0;
+        }
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin: 1rem 0;
+            color: #4299e1;
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border: 1px solid #4299e1;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+        .back-button:hover {
+            background: #4299e1;
+            color: white;
+            text-decoration: none;
+        }
+        .training-description {
+            background: #f8fafc;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 2rem 0;
+            line-height: 1.6;
+        }
+        .training-description h2, .training-description h3 {
+            color: #2d3748;
+            margin-top: 0;
+        }
+        .training-description p, .training-description ul, .training-description ol {
+            margin-bottom: 1rem;
+            color: #4a5568;
+        }
+        .training-description li {
+            margin-bottom: 0.5rem;
+        }
+        .training-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        .training-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border: 1px solid #e2e8f0;
+        }
+        .training-card h4 {
+            margin-top: 0;
+            color: #2d3748;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <header class="main-header">
+        <div class="container">
+            <nav class="navbar">
+                <a href="../index.html" class="logo">
+                    <img src="https://www.freepnglogos.com/uploads/rocket-league-logo-png/rocket-league-logo-png-1.png" alt="Rocket League Logo" class="rl-logo">
+                    <span>RL Bot Training</span>
+                </a>
+                <button class="hamburger" aria-label="Toggle navigation menu" aria-expanded="false">
+                    <span class="hamburger-box">
+                        <span class="hamburger-inner"></span>
+                    </span>
+                </button>
+                <ul class="nav-links">
+                    <li><a href="../index.html">Home</a></li>
+                    <li><a href="../training-packs.html">Training Codes</a></li>
+                    <li><a href="../bot-tools.html">Bot Tools</a></li>
+                    <li><a href="../tutorials.html">Tutorials</a></li>
+                    <li><a href="../community.html">Community</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="section">
+            <div class="container">
+                <a href="../training-packs.html" class="back-button">
+                    <i class="fas fa-arrow-left"></i> Back to Training Packs
+                </a>
+                
+                <div class="training-content">
+                    <div class="training-header">
+                        <h1>Wall Play Mastery</h1>
+                        <img src="https://i.ytimg.com/vi/3KZ9QjEGEKQ/maxresdefault.jpg" alt="Wall Play Mastery" class="training-image">
+                        <div class="training-tags">
+                            <span class="tag">Wall Shots</span>
+                            <span class="tag">Defense</span>
+                            <span class="tag">Advanced</span>
+                            <span class="tag">Mechanics</span>
+                        </div>
+                    </div>
+                    
+                    <div class="training-description">
+                        <h2>Master the Walls</h2>
+                        <p>Wall play is an essential skill for any advanced Rocket League bot. This training pack focuses on developing your bot's ability to read and control the ball off the walls, make effective clears, and execute powerful shots from difficult angles.</p>
+                        
+                        <h3>Training Focus Areas</h3>
+                        <div class="training-grid">
+                            <div class="training-card">
+                                <h4>Wall Clears</h4>
+                                <p>Practice powerful and accurate clears from your own back wall to relieve pressure and start counter-attacks.</p>
+                                <ul>
+                                    <li>Basic clears to midfield</li>
+                                    <li>Dribble setups</li>
+                                    <li>Passing plays</li>
+                                </ul>
+                            </div>
+                            <div class="training-card">
+                                <h4>Wall Shots</h4>
+                                <p>Develop the ability to read and shoot the ball effectively from the walls.</p>
+                                <ul>
+                                    <li>Direct shots on goal</li>
+                                    <li>Backboard reads</li>
+                                    <li>Angle shots</li>
+                                </ul>
+                            </div>
+                            <div class="training-card">
+                                <h4>Wall Defense</h4>
+                                <p>Learn to defend against wall plays and make crucial saves.</p>
+                                <ul>
+                                    <li>Shadow defense</li>
+                                    <li>Wall challenges</li>
+                                    <li>Backboard clears</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <h3>Training Tips</h3>
+                        <ol>
+                            <li><strong>Positioning is Key</strong> - Learn to position your car parallel to the wall for better control</li>
+                            <li><strong>Ball Reading</strong> - Practice predicting the ball's trajectory off the wall</li>
+                            <li><strong>Boost Management</strong> - Learn when to use boost for wall plays</li>
+                            <li><strong>Recovery</strong> - Master landing on the wall and transitioning back to the ground</li>
+                            <li><strong>Power vs. Control</strong> - Know when to hit the ball hard versus when to maintain possession</li>
+                        </ol>
+                    </div>
+                    
+                    <div class="training-code">
+                        <h2>Training Packs</h2>
+                        <div class="code-block">
+                            <h3>Wall Shot Training</h3>
+                            <p><strong>Code:</strong> 5A65-4073-F310-5495</p>
+                            <p><strong>Difficulty:</strong> Intermediate to Advanced</p>
+                            <p>Focuses on shooting from various wall positions with different angles and speeds.</p>
+                            
+                            <h3>Wall Clears</h3>
+                            <p><strong>Code:</strong> 5CCE-CB5E-653A-EA21</p>
+                            <p><strong>Difficulty:</strong> Intermediate</p>
+                            <p>Practice clearing the ball from your defensive wall to relieve pressure.</p>
+                            
+                            <h3>Backboard Defense</h3>
+                            <p><strong>Code:</strong> 7F9D-1917-33B8-FD69</p>
+                            <p><strong>Difficulty:</strong> Advanced</p>
+                            <p>Master the art of defending shots that bounce off your backboard.</p>
+                            
+                            <h3>How to Use These Codes</h3>
+                            <ol>
+                                <li>Go to <strong>Training</strong> in the main menu</li>
+                                <li>Select <strong>Custom Training</strong></li>
+                                <li>Press the button to <strong>Enter Code</strong></li>
+                                <li>Enter any of the codes above and select <strong>Search</strong></li>
+                                <li>Start training!</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="main-footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Join Our Community</h3>
+                    <p>Connect with other bot developers and share your projects</p>
+                    <div class="social-links">
+                        <a href="https://github.com/RLBot/RLBot" target="_blank" rel="noopener noreferrer" aria-label="GitHub"><i class="fab fa-github"></i> RLBot GitHub</a>
+                        <a href="https://github.com/dxkku" target="_blank" rel="noopener noreferrer" aria-label="GitHub"><i class="fab fa-github"></i> My GitHub</a>
+                        <a href="https://discord.gg/fkG77fPmCd" target="_blank" rel="noopener noreferrer" aria-label="Discord"><i class="fab fa-discord"></i> Discord</a>
+                        <a href="https://www.reddit.com/r/RocketLeagueBots/" target="_blank" rel="noopener noreferrer" aria-label="Reddit"><i class="fab fa-reddit"></i> Reddit</a>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="../index.html">Home</a></li>
+                        <li><a href="../training-packs.html">Training Codes</a></li>
+                        <li><a href="../bot-tools.html">Bot Tools</a></li>
+                        <li><a href="../tutorials.html">Tutorials</a></li>
+                        <li><a href="../community.html">Community</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Rocket League Bot Training. Not affiliated with Psyonix or Epic Games.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../script.js"></script>
+</body>
+</html>

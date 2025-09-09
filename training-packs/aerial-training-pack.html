@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Aerial Training Pack - Master aerial control and ball prediction">
+    <title>Rocket League Bot Training | Aerial Training Pack</title>
+    <link rel="icon" type="image/png" href="https://www.freepnglogos.com/uploads/rocket-league-logo-png/rocket-league-logo-png-1.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <script>
+        // Add copy button to all code blocks
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add copy button to each code block
+            document.querySelectorAll('pre code').forEach(function(codeBlock) {
+                const button = document.createElement('button');
+                button.className = 'copy-button';
+                button.type = 'button';
+                button.title = 'Copy to clipboard';
+                button.innerHTML = '<i class="far fa-copy"></i>';
+                
+                // Create container for the button
+                const container = document.createElement('div');
+                container.className = 'code-header';
+                container.style.display = 'flex';
+                container.style.justifyContent = 'flex-end';
+                
+                // Insert the button before the pre element
+                const pre = codeBlock.parentNode;
+                if (pre.parentNode) {
+                    pre.parentNode.insertBefore(container, pre);
+                    container.appendChild(button);
+                }
+
+                button.addEventListener('click', function() {
+                    // Create a temporary textarea to copy from
+                    const textarea = document.createElement('textarea');
+                    textarea.value = codeBlock.textContent;
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    
+                    try {
+                        // Copy the text
+                        document.execCommand('copy');
+                        button.innerHTML = '<i class="fas fa-check"></i>';
+                        button.classList.add('copied');
+                        
+                        // Reset button after 2 seconds
+                        setTimeout(function() {
+                            button.innerHTML = '<i class="far fa-copy"></i>';
+                            button.classList.remove('copied');
+                        }, 2000);
+                    } catch (err) {
+                        console.error('Failed to copy text: ', err);
+                    }
+                    
+                    // Clean up
+                    document.body.removeChild(textarea);
+                });
+            });
+        });
+    </script>
+    <style>
+        pre {
+            margin: 0;
+            padding: 0;
+            background: none;
+            font-family: 'Fira Code', 'Courier New', monospace;
+            white-space: pre;
+            word-wrap: normal;
+        }
+        
+        code {
+            font-family: 'Fira Code', 'Courier New', monospace;
+            font-size: 0.95rem;
+        }
+        
+        .training-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: rgba(26, 32, 44, 0.9);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .training-background {
+            background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.8)), 
+                        url('https://images.unsplash.com/photo-1569505840673-3f5b24b6c1d9?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80');
+            background-size: cover;
+            background-position: center;
+            padding: 4rem 0;
+            margin-top: -1rem;
+        }
+        
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #90cdf4;
+            text-decoration: none;
+            margin-bottom: 1.5rem;
+            font-weight: 500;
+            transition: color 0.2s ease;
+        }
+        
+        .back-button:hover {
+            color: #63b3ed;
+        }
+        
+        .reward-documentation {
+            background: rgba(45, 55, 72, 0.5);
+            border-left: 4px solid #3b82f6;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .training-section h2 {
+            color: #63b3ed;
+            margin: 2.5rem 0 1.5rem 0;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #2c5282;
+            font-weight: 600;
+            font-size: 1.75rem;
+        }
+        
+        .reward-documentation p {
+            margin-bottom: 1rem;
+            line-height: 1.7;
+            color: #e2e8f0;
+        }
+        
+        .training-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 2rem;
+            background: rgba(26, 32, 44, 0.8);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .training-header h1 {
+            color: #ffffff;
+            margin-bottom: 0.5rem;
+            font-size: 2.5rem;
+        }
+        .training-header img {
+            max-width: 100%;
+            border-radius: 8px;
+            margin: 1rem 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            max-height: 400px;
+            object-fit: cover;
+        }
+        .training-tags {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0.5rem;
+            margin: 1.5rem 0;
+        }
+        
+        .tag {
+            background: rgba(49, 130, 206, 0.2);
+            color: #90cdf4;
+            padding: 0.4rem 0.8rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            border: 1px solid rgba(99, 179, 237, 0.3);
+            transition: all 0.2s ease;
+        }
+        
+        .tag:hover {
+            background: rgba(49, 130, 206, 0.3);
+            transform: translateY(-1px);
+        }
+        
+        .tag i {
+            margin-right: 0.3rem;
+        }
+        
+        .code-section {
+            margin: 2.5rem 0;
+            position: relative;
+        }
+        
+        .code-header {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: -2rem;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .copy-button {
+            background: #2c5282;
+            color: white;
+            border: 1px solid #2b6cb0;
+            padding: 0.4rem 0.8rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            z-index: 10;
+        }
+        
+        .copy-button.copied {
+            background: #2f855a;
+            border-color: #38a169;
+            transform: scale(0.95);
+        }
+        
+        /* Syntax highlighting for code blocks */
+        .token.comment,
+        .token.prolog,
+        .token.doctype,
+        .token.cdata {
+            color: #6b7280;
+        }
+        
+        .token.punctuation {
+            color: #e5e7eb;
+        }
+        
+        .token.property,
+        .token.tag,
+        .token.boolean,
+        .token.number,
+        .token.constant,
+        .token.symbol,
+        .token.deleted {
+            color: #f472b6;
+        }
+        
+        .token.selector,
+        .token.attr-name,
+        .token.string,
+        .token.char,
+        .token.builtin,
+        .token.inserted {
+            color: #34d399;
+        }
+        
+        .token.operator,
+        .token.entity,
+        .token.url,
+        .language-css .token.string,
+        .style .token.string {
+            color: #93c5fd;
+        }
+        
+        .token.atrule,
+        .token.attr-value,
+        .token.keyword {
+            color: #60a5fa;
+        }
+        
+        .token.function,
+        .token.class-name {
+            color: #fbbf24;
+        }
+        
+        .token.regex,
+        .token.important,
+        .token.variable {
+            color: #f59e0b;
+        }
+        
+        .code-block {
+            position: relative;
+            background: #1a202c;
+            color: #e2e8f0;
+            padding: 1.5rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+            font-family: 'Fira Code', 'Courier New', monospace;
+            border: 1px solid #2d3748;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .training-header p {
+            color: #cbd5e0;
+            font-size: 1.15rem;
+            max-width: 800px;
+            margin: 0 auto 1.5rem;
+            line-height: 1.7;
+        }
+        
+        .training-section {
+            margin-bottom: 3rem;
+        }
+        
+        .training-section h2 {
+            color: #63b3ed;
+            margin: 2.5rem 0 1.5rem 0;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #2c5282;
+            font-weight: 600;
+            font-size: 1.75rem;
+        }
+        
+        .training-section h3 {
+            color: #90cdf4;
+            margin: 2rem 0 1rem 0;
+            font-weight: 500;
+            font-size: 1.4rem;
+            position: relative;
+            padding-left: 1rem;
+            border-left: 3px solid #3b82f6;
+        }
+        
+        .training-section p, .training-section li {
+            color: #e2e8f0;
+            line-height: 1.8;
+            margin-bottom: 1.2rem;
+            font-size: 1.05rem;
+        }
+        
+        /* Syntax highlighting colors */
+        .code-block .token.keyword { color: #ff79c6; }
+        .code-block .token.function { color: #50fa7b; }
+        .code-block .token.class-name { color: #8be9fd; }
+        .code-block .token.string { color: #f1fa8c; }
+        .code-block .token.comment { color: #6272a4; font-style: italic; }
+        .code-block .token.punctuation { color: #f8f8f2; }
+        .code-block .token.operator { color: #ff79c6; }
+        .code-block .token.number { color: #bd93f9; }
+        .code-block .token.constant { color: #bd93f9; }
+        .code-block .token.builtin { color: #50fa7b; }
+        
+        .code-block pre {
+            margin: 0;
+            padding: 0;
+            background: none;
+            font-family: inherit;
+            white-space: pre;
+            word-wrap: normal;
+        }
+    </style>
+</head>
+<body>
+    <header class="main-header">
+        <div class="container">
+            <nav class="navbar">
+                <a href="../index.html" class="logo">
+                    <img src="https://www.freepnglogos.com/uploads/rocket-league-logo-png/rocket-league-logo-png-1.png" alt="Rocket League Logo" class="rl-logo">
+                    <span>RL Bot Training</span>
+                </a>
+                <button class="hamburger" aria-label="Toggle navigation menu" aria-expanded="false">
+                    <span class="hamburger-box">
+                        <span class="hamburger-inner"></span>
+                    </span>
+                </button>
+                <ul class="nav-links">
+                    <li><a href="../index.html">Home</a></li>
+                    <li><a href="../training-packs.html">Training Codes</a></li>
+                    <li><a href="../bot-tools.html">Bot Tools</a></li>
+                    <li><a href="../tutorials.html">Tutorials</a></li>
+                    <li><a href="../community.html">Community</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <div class="training-background">
+        <section class="section">
+            <div class="container">
+                <a href="../training-packs.html" class="back-button">
+                    <i class="fas fa-arrow-left"></i> Back to Training Packs
+                </a>
+                
+                <div class="training-content">
+                    <div class="training-header">
+                        <h1>Aerial Training Pack</h1>
+                        <p>Master aerial control and ball prediction with this comprehensive training pack</p>
+                        
+                        <div class="training-tags">
+                            <span class="tag"><i class="fas fa-jet-fighter-up"></i> Aerial</span>
+                            <span class="tag"><i class="fas fa-star"></i> Advanced</span>
+                            <span class="tag"><i class="fas fa-cogs"></i> Mechanics</span>
+                            <span class="tag"><i class="fas fa-dumbbell"></i> Training</span>
+                        </div>
+                    </div>
+                    
+                    <div class="training-description">
+                        <h2>Description</h2>
+                        <p>Master aerial control and ball prediction with this comprehensive aerial training pack. Perfect for both beginners and advanced bot training. This pack focuses on improving your bot's ability to read the ball in the air and make precise aerial hits.</p>
+                        
+                        <h3>Key Features:</h3>
+                        <ul>
+                            <li>Progressive difficulty levels from basic to advanced aerials</li>
+                            <li>Focus on ball prediction and aerial control</li>
+                            <li>Varied ball trajectories and starting positions</li>
+                            <li>Designed for both ground-to-air and wall-to-air aerials</li>
+                            <li>Includes redirect and double-touch scenarios</li>
+                        </ul>
+                        
+                        <h3>Training Tips:</h3>
+                        <ul>
+                            <li>Start with basic aerials and gradually increase difficulty</li>
+                            <li>Focus on efficient boost management</li>
+                            <li>Practice reading the ball's trajectory early</li>
+                            <li>Work on both power and accuracy of your hits</li>
+                            <li>Experiment with different aerial approaches and angles</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="training-code">
+                        <h2>Training Code</h2>
+                        <div class="code-block">
+                            
+                            <h3>How to Instantiate</h3>
+                            <p>The class has four optional parameters in its constructor, allowing you to customize the reward function's behavior:</p>
+                            <ul>
+                                <li><code>touch_height_weight</code>: A float that scales the reward for the first aerial touch. A higher value means the agent is more heavily rewarded for making a high first touch. Default is 1.0.</li>
+                                <li><code>car_distance_weight</code>: A float that scales the reward for the distance the car travels during consecutive aerial plays. Default is 1.0.</li>
+                                <li><code>ball_distance_weight</code>: A float that scales the reward for the distance the ball travels during consecutive aerial plays. Default is 1.0.</li>
+                                <li><code>distance_normalization</code>: A float used to normalize the distance-based rewards. This prevents the reward values from becoming excessively large. The default value of <code>1 / BACK_WALL_Y</code> uses the length of the field as a baseline for normalization.</li>
+                            </ul>
+                            
+                            <p>You can create an instance of the class like this:</p>
+                            
+                            <div class="code-block">
+<pre><code class="language-python">from rlgym.rocket_league.rewards import AerialDistanceReward
+
+# Instantiate with default weights
+aerial_reward = AerialDistanceReward()
+
+# Or with custom weights to prioritize ball distance
+aerial_reward_custom = AerialDistanceReward(
+    car_distance_weight=0.5,
+    ball_distance_weight=1.5
+)</code></pre>
+</div>
+
+                            <h3>How to Use in an RLGym Environment</h3>
+                            <p>Once you have an instance of the AerialDistanceReward class, you provide it as an argument when creating your RLGym environment. The environment will then use this reward function to calculate the reward for your agent at each time step.</p>
+                            
+                            <p>Here is an example of how to create an environment that uses this custom reward function:</p>
+                            
+                            <div class="code-block">
+<pre><code class="language-python">from rlgym.envs import make
+
+# Create a custom reward instance
+aerial_reward = AerialDistanceReward()
+
+# Pass the reward function to the environment constructor
+env = make(reward_fn=aerial_reward)
+
+# Now, when you step the environment, the rewards will be calculated
+# based on the AerialDistanceReward logic
+obs, info = env.reset()
+done = False
+while not done:
+    action = env.action_space.sample()
+    obs, reward, terminated, truncated, info = env.step(action)
+    done = terminated or truncated</code></pre>
+</div>
+                            
+                            <h3>Custom Aerial Reward Function</h3>
+                            <p>Here's a custom reward function for RLGym that rewards aerial play based on height and distance:</p>
+                            
+                            <div class="reward-documentation">
+                                <p>The provided Python code defines an AerialDistanceReward class for the rlgym framework, a library used to train reinforcement learning agents in the video game Rocket League. This class is a custom RewardFunction that incentivizes agents to perform and maintain aerial plays by rewarding them based on the height and distance of their aerial touches.</p>
+                                
+                                <h4>Core Logic</h4>
+                                <p>The reward system operates on two main principles:</p>
+                                <ul>
+                                    <li><strong>First Aerial Touch Reward:</strong> When an agent makes the first aerial touch on the ball (while their car is above a certain height, defined by RAMP_HEIGHT), they receive a reward proportional to the height of that touch. The reward is a weighted average of the car's and the ball's height. This encourages the agent to get the ball up in the air and make the initial contact.</li>
+                                    <li><strong>Consecutive Aerial Touch Reward:</strong> If the same agent makes consecutive touches on the ball without being grounded or another player touching the ball, they are rewarded based on the total distance traveled by both their car and the ball since the last aerial touch. This incentivizes agents to maintain control of the ball in the air and "dribble" it aerially over a long distance.</li>
+                                </ul>
+                                
+                                <h4>State Management</h4>
+                                <p>To achieve this, the class manages a few key state variables:</p>
+                                <ul>
+                                    <li><code>distances</code>: A dictionary that stores the cumulative distance traveled for each agent since their last aerial touch.</li>
+                                    <li><code>last_touch_agent</code>: A variable that keeps track of the ID of the agent who last made an aerial touch.</li>
+                                    <li><code>prev_state</code>: A reference to the game state from the previous time step, used to calculate distance traveled in the current step.</li>
+                                </ul>
+                                
+                                <p>The rewards are reset when either of two conditions is met:</p>
+                                <ol>
+                                    <li>The agent who made the last aerial touch touches the ground (i.e., their car height drops below RAMP_HEIGHT).</li>
+                                    <li>Another agent touches the ball.</li>
+                                </ol>
+                                
+                                <p>This ensures that the reward is only for continuous, uninterrupted aerial plays. The reward values are also normalized by BACK_WALL_Y to keep them within a reasonable range.</p>
+                            </div>
+                            
+                            <div class="code-section">
+                                <div class="code-header">
+                                </div>
+                                <div class="code-block">
+<pre><code class="language-python">
+from typing import List, Dict, Any
+
+import numpy as np
+from rlgym.api import RewardFunction, AgentID
+from rlgym.rocket_league.api import GameState
+from rlgym.rocket_league.common_values import BACK_WALL_Y
+
+RAMP_HEIGHT = 256
+
+
+class AerialDistanceReward(RewardFunction[AgentID, GameState, float]):
+    """
+    Aerial distance reward.
+    - First aerial touch is rewarded by height
+    - Consecutive touches based on distance travelled (since last aerial touch)
+    - Resets when grounded or when another player touches the ball
+    """
+
+    def __init__(
+            self,
+            touch_height_weight: float = 1.0,
+            car_distance_weight: float = 1.0,
+            ball_distance_weight: float = 1.0,
+            distance_normalization: float = 1 / BACK_WALL_Y
+    ):
+        super().__init__()
+        self.touch_height_weight = touch_height_weight
+        self.car_distance_weight = car_distance_weight
+        self.ball_distance_weight = ball_distance_weight
+        self.distance_normalization = distance_normalization
+        self.distances = {}
+        self.last_touch_agent = None
+        self.prev_state = None
+
+    def reset(self, agents: List[AgentID], initial_state: GameState, shared_info: Dict[str, Any]) -> None:
+        self.distances = {k: 0 for k in agents}
+        self.last_touch_agent = None
+        self.prev_state = initial_state
+
+    def get_rewards(self, agents: List[AgentID], state: GameState, is_terminated: Dict[AgentID, bool],
+                    is_truncated: Dict[AgentID, bool], shared_info: Dict[str, Any]) -> Dict[AgentID, float]:
+        rewards = {k: 0 for k in agents}
+        for agent in agents:
+            car = state.cars[agent]
+            if self.last_touch_agent == agent:
+                if car.physics.position[2] < RAMP_HEIGHT:
+                    self.distances[agent] = 0
+                    self.last_touch_agent = None
+                else:
+                    dist_car = np.linalg.norm(car.physics.position - self.prev_state.cars[agent].physics.position)
+                    dist_ball = np.linalg.norm(state.ball.position - self.prev_state.ball.position)
+                    self.distances[agent] += (dist_car * self.car_distance_weight
+                                              + dist_ball * self.ball_distance_weight)
+            if car.ball_touches > 0:
+                if self.last_touch_agent == agent:
+                    norm_dist = self.distances[agent] * self.distance_normalization
+                    rewards[agent] += norm_dist
+                else:
+                    w1 = self.car_distance_weight
+                    w2 = self.ball_distance_weight
+                    if w1 == w2 == 0:
+                        w1 = w2 = 1
+                    touch_height = float((w1 * car.physics.position[2] + w2 * state.ball.position[2]) / (w1 + w2))
+                    touch_height = max(0.0, touch_height - RAMP_HEIGHT)  # Clamp to 0
+                    norm_dist = touch_height * self.distance_normalization
+                    rewards[agent] += norm_dist * self.touch_height_weight
+                    self.last_touch_agent = agent
+                self.distances[agent] = 0
+        self.prev_state = state
+        shared_info["aerial_distance_info"] = {"distances": self.distances, "last_touch_agent": self.last_touch_agent}
+        return rewards</code></pre>
+</div>
+</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <footer class="main-footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Join Our Community</h3>
+                    <p>Connect with other bot developers and share your projects</p>
+                    <div class="social-links">
+                        <a href="https://github.com/RLBot/RLBot" target="_blank" rel="noopener noreferrer" aria-label="GitHub"><i class="fab fa-github"></i> RLBot GitHub</a>
+                        <a href="https://github.com/dxkku" target="_blank" rel="noopener noreferrer" aria-label="GitHub"><i class="fab fa-github"></i> My GitHub</a>
+                        <a href="https://discord.gg/fkG77fPmCd" target="_blank" rel="noopener noreferrer" aria-label="Discord"><i class="fab fa-discord"></i> Discord</a>
+                        <a href="https://www.reddit.com/r/RocketLeagueBots/" target="_blank" rel="noopener noreferrer" aria-label="Reddit"><i class="fab fa-reddit"></i> Reddit</a>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="../index.html">Home</a></li>
+                        <li><a href="../training-packs.html">Training Codes</a></li>
+                        <li><a href="../bot-tools.html">Bot Tools</a></li>
+                        <li><a href="../tutorials.html">Tutorials</a></li>
+                        <li><a href="../community.html">Community</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Rocket League Bot Training. Not affiliated with Psyonix or Epic Games.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../script.js"></script>
+</body>
+</html>

@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Boost Keep Reward - Reward function for maintaining boost in RLGym">
+    <title>Rocket League Bot Training | Boost Keep Reward</title>
+    <link rel="icon" type="image/png" href="https://www.freepnglogos.com/uploads/rocket-league-logo-png/rocket-league-logo-png-1.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <script>
+        // Add copy button to all code blocks
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add copy button to each code block
+            document.querySelectorAll('pre code').forEach(function(codeBlock) {
+                const button = document.createElement('button');
+                button.className = 'copy-button';
+                button.type = 'button';
+                button.title = 'Copy to clipboard';
+                button.innerHTML = '<i class="far fa-copy"></i>';
+                
+                // Create container for the button
+                const container = document.createElement('div');
+                container.className = 'code-header';
+                container.style.display = 'flex';
+                container.style.justifyContent = 'flex-end';
+                
+                // Insert the button before the pre element
+                const pre = codeBlock.parentNode;
+                if (pre.parentNode) {
+                    pre.parentNode.insertBefore(container, pre);
+                    container.appendChild(button);
+                }
+
+                button.addEventListener('click', function() {
+                    // Create a temporary textarea to copy from
+                    const textarea = document.createElement('textarea');
+                    textarea.value = codeBlock.textContent;
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    
+                    try {
+                        // Copy the text
+                        document.execCommand('copy');
+                        button.innerHTML = '<i class="fas fa-check"></i>';
+                        button.classList.add('copied');
+                        
+                        // Reset button after 2 seconds
+                        setTimeout(function() {
+                            button.innerHTML = '<i class="far fa-copy"></i>';
+                            button.classList.remove('copied');
+                        }, 2000);
+                    } catch (err) {
+                        console.error('Failed to copy text: ', err);
+                    }
+                    
+                    // Clean up
+                    document.body.removeChild(textarea);
+                });
+            });
+        });
+    </script>
+    <style>
+        pre {
+            margin: 0;
+            padding: 0;
+            background: none;
+            font-family: 'Fira Code', 'Courier New', monospace;
+            white-space: pre;
+            word-wrap: normal;
+        }
+        
+        code {
+            font-family: 'Fira Code', 'Courier New', monospace;
+            font-size: 0.95rem;
+        }
+        
+        .training-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: rgba(26, 32, 44, 0.9);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .training-background {
+            background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.8)), 
+                        url('https://images.unsplash.com/photo-1569505840673-3f5b24b6c1d9?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80');
+            background-size: cover;
+            background-position: center;
+            padding: 4rem 0;
+            margin-top: -1rem;
+        }
+        
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #90cdf4;
+            text-decoration: none;
+            margin-bottom: 1.5rem;
+            font-weight: 500;
+            transition: color 0.2s ease;
+        }
+        
+        .back-button:hover {
+            color: #63b3ed;
+        }
+        
+        .reward-documentation {
+            background: rgba(45, 55, 72, 0.5);
+            border-left: 4px solid #3b82f6;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .training-section h2 {
+            color: #63b3ed;
+            margin: 2.5rem 0 1.5rem 0;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #2c5282;
+            font-weight: 600;
+            font-size: 1.75rem;
+        }
+        
+        .training-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 2rem;
+            background: rgba(26, 32, 44, 0.8);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .training-header h1 {
+            color: #ffffff;
+            margin-bottom: 0.5rem;
+            font-size: 2.5rem;
+        }
+        
+        .training-header p {
+            color: #cbd5e0;
+            font-size: 1.15rem;
+            max-width: 800px;
+            margin: 0 auto 1.5rem;
+            line-height: 1.7;
+        }
+        
+        .training-tags {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0.5rem;
+            margin: 1.5rem 0;
+        }
+        
+        .tag {
+            background: rgba(49, 130, 206, 0.2);
+            color: #90cdf4;
+            padding: 0.4rem 0.8rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            border: 1px solid rgba(99, 179, 237, 0.3);
+            transition: all 0.2s ease;
+        }
+        
+        .tag:hover {
+            background: rgba(49, 130, 206, 0.3);
+            transform: translateY(-1px);
+        }
+        
+        .tag i {
+            margin-right: 0.3rem;
+        }
+        
+        .code-section {
+            margin: 2.5rem 0;
+            position: relative;
+        }
+        
+        .code-block {
+            position: relative;
+            background: #1a202c;
+            color: #e2e8f0;
+            padding: 1.5rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+            font-family: 'Fira Code', 'Courier New', monospace;
+            border: 1px solid #2d3748;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .code-block pre {
+            margin: 0;
+            padding: 0;
+            background: none;
+            font-family: inherit;
+            white-space: pre;
+            word-wrap: normal;
+        }
+        
+        .copy-button {
+            background: #2d3748;
+            color: #a0aec0;
+            border: 1px solid #4a5568;
+            border-radius: 4px;
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            z-index: 10;
+            transition: all 0.2s ease;
+        }
+        
+        .copy-button:hover {
+            background: #4a5568;
+            color: #e2e8f0;
+        }
+        
+        .copy-button.copied {
+            background: #2f855a;
+            border-color: #38a169;
+            transform: scale(0.95);
+        }
+        
+        /* Syntax highlighting for code blocks */
+        .token.comment,
+        .token.prolog,
+        .token.doctype,
+        .token.cdata {
+            color: #6b7280;
+        }
+        
+        .token.punctuation {
+            color: #e5e7eb;
+        }
+        
+        .token.property,
+        .token.tag,
+        .token.boolean,
+        .token.number,
+        .token.constant,
+        .token.symbol,
+        .token.deleted {
+            color: #f472b6;
+        }
+        
+        .token.selector,
+        .token.attr-name,
+        .token.string,
+        .token.char,
+        .token.builtin,
+        .token.inserted {
+            color: #34d399;
+        }
+        
+        .token.operator,
+        .token.entity,
+        .token.url,
+        .language-css .token.string,
+        .style .token.string {
+            color: #93c5fd;
+        }
+        
+        .token.atrule,
+        .token.attr-value,
+        .token.keyword {
+            color: #60a5fa;
+        }
+        
+        .token.function,
+        .token.class-name {
+            color: #fbbf24;
+        }
+        
+        .token.regex,
+        .token.important,
+        .token.variable {
+            color: #f59e0b;
+        }
+        
+        .training-section p, .training-section li {
+            color: #e2e8f0;
+            line-height: 1.8;
+            margin-bottom: 1.2rem;
+            font-size: 1.05rem;
+        }
+        
+        .training-section h3 {
+            color: #90cdf4;
+            margin: 2rem 0 1rem 0;
+            font-weight: 500;
+            font-size: 1.4rem;
+            position: relative;
+            padding-left: 1rem;
+            border-left: 3px solid #3b82f6;
+        }
+        
+        .training-section ul, .training-section ol {
+            margin: 1.2rem 0;
+            padding-left: 1.5rem;
+        }
+        
+        .training-section li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .parameters-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            background: rgba(45, 55, 72, 0.5);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .parameters-table th, 
+        .parameters-table td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid #2d3748;
+        }
+        
+        .parameters-table th {
+            background: #2d3748;
+            color: #63b3ed;
+            font-weight: 500;
+        }
+        
+        .parameters-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .parameters-table code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .training-content {
+                padding: 1rem;
+            }
+            
+            .training-header {
+                padding: 1.5rem 1rem;
+            }
+            
+            .training-header h1 {
+                font-size: 2rem;
+            }
+            
+            .training-section h2 {
+                font-size: 1.5rem;
+            }
+            
+            .code-block {
+                padding: 1rem;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="main-header">
+        <div class="container">
+            <nav class="navbar">
+                <a href="../index.html" class="logo">
+                    <img src="../images/logo.png" alt="LarryBot Logo" class="logo-img">
+                    <span class="logo-text">LarryBot</span>
+                </a>
+                <ul class="nav-links">
+                    <li><a href="../index.html">Home</a></li>
+                    <li><a href="../bot-tools.html">Bot Tools</a></li>
+                    <li><a href="../training-packs.html" class="active">Training Packs</a></li>
+                    <li><a href="../tutorials.html">Tutorials</a></li>
+                    <li><a href="../community.html">Community</a></li>
+                </ul>
+                <div class="hamburger">
+                    <div class="line"></div>
+                    <div class="line"></div>
+                    <div class="line"></div>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <div class="training-background">
+        <section class="section">
+            <div class="container">
+                <a href="../training-packs.html" class="back-button">
+                    <i class="fas fa-arrow-left"></i> Back to Training Packs
+                </a>
+                
+                <div class="training-content">
+                    <div class="training-header">
+                        <h1>Boost Keep Reward</h1>
+                        <p>A reward function that rewards agents for maintaining and efficiently using their boost in RLGym.</p>
+                        
+                        <div class="training-tags">
+                            <span class="tag"><i class="fas fa-tag"></i> RLGym</span>
+                            <span class="tag"><i class="fas fa-bolt"></i> Boost Management</span>
+                            <span class="tag"><i class="fas fa-robot"></i> AI Training</span>
+                            <span class="tag"><i class="fas fa-code"></i> Python</span>
+                        </div>
+                    </div>
+                    
+                    <div class="training-section">
+                        <h2>Overview</h2>
+                        <p>The <code>BoostKeepReward</code> is a reward function designed to encourage agents to maintain and efficiently use their boost. It provides a continuous reward based on the amount of boost the agent has, with configurable scaling through an activation function.</p>
+                        
+                        <div class="reward-documentation">
+                            <h3>Key Features</h3>
+                            <ul>
+                                <li>Rewards agents for maintaining boost in their tank</li>
+                                <li>Configurable reward scaling using an activation function</li>
+                                <li>Supports both individual and multi-agent environments</li>
+                                <li>Efficient implementation with minimal computational overhead</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="training-section">
+                        <h2>Implementation</h2>
+                        
+                        <div class="code-section">
+                            <h3>BoostKeepReward Class</h3>
+                            <p>Here's the complete implementation of the <code>BoostKeepReward</code> class:</p>
+                            
+                            <div class="code-block">
+<pre><code class="language-python">import math
+from typing import List, Dict, Any, Callable
+
+from rlgym.api import RewardFunction, AgentID, StateType, RewardType
+from rlgym.rocket_league.api import GameState
+from rlgym.rocket_league.common_values import TICKS_PER_SECOND
+
+
+class BoostKeepReward(RewardFunction[AgentID, GameState, float]):
+    def __init__(self, reward_per_second: float = 1.0,
+                 activation_fn: Callable[[float], float] = lambda x: math.sqrt(0.01 * x)):
+        """
+        Reward function that rewards agents for having boost in their tank.
+
+        :param reward_per_second: Amount of reward to give per second at full boost.
+        :param activation_fn: Activation function to apply to the boost value before calculating the reward. Default is
+                              the square root function so that increasing boost is more important when boost is low.
+        """
+        self.reward_per_tick = reward_per_second / TICKS_PER_SECOND
+        self.activation_fn = activation_fn
+
+        self.prev_ticks = None
+
+    def reset(self, agents: List[AgentID], initial_state: GameState, shared_info: Dict[str, Any]) -> None:
+        self.prev_ticks = initial_state.tick_count
+
+    def get_rewards(self, agents: List[AgentID], state: GameState, is_terminated: Dict[AgentID, bool],
+                    is_truncated: Dict[AgentID, bool], shared_info: Dict[str, Any]) -> Dict[AgentID, RewardType]:
+        ticks_passed = state.tick_count - self.prev_ticks
+        mul = self.reward_per_tick * ticks_passed
+        rewards = {}
+        for agent in agents:
+            boost = state.cars[agent].boost_amount
+            rewards[agent] = self.activation_fn(boost) * mul
+        self.prev_ticks = state.tick_count
+
+        return rewards</code></pre>
+                            </div>
+                        </div>
+                        
+                        <div class="training-description">
+                            <h3>How the Reward System Works</h3>
+                            <p>The <code>BoostKeepReward</code> function provides continuous positive reinforcement to agents based on their current boost level. The reward is calculated using the following formula:</p>
+                            
+                            <p><code>reward = activation_fn(boost_amount) * reward_per_tick * ticks_since_last_update</code></p>
+                            
+                            <div class="reward-documentation">
+                                <h4>Detailed Explanation</h4>
+                                <p>The provided Python code defines a reward function for a reinforcement learning agent in the game Rocket League. This function, called <code>BoostKeepReward</code>, is designed to reward the agent for maintaining a high level of boost.</p>
+                                
+                                <h5>How It Works</h5>
+                                <p>The core of the <code>BoostKeepReward</code> function is to calculate a reward for each agent based on its current boost level. Here's a breakdown of the key components:</p>
+                                
+                                <h5>Initialization (__init__)</h5>
+                                <p>The function is set up with two main parameters:</p>
+                                <ul>
+                                    <li><strong>reward_per_second</strong>: This is a float that determines the base amount of reward the agent receives per second if it has a full boost tank.</li>
+                                    <li><strong>activation_fn</strong>: This is a function that modifies the boost value before it's used to calculate the reward. By default, it uses the square root of the boost amount. The purpose of this is to make it more beneficial for the agent to get boost when its tank is nearly empty than when it's already full.</li>
+                                </ul>
+                                
+                                <p>For example, increasing boost from 1% to 2% provides a proportionally larger reward than increasing it from 99% to 100%.</p>
+                                
+                                <h5>Reward Calculation (get_rewards)</h5>
+                                <p>In each game tick, the function performs the following steps for every agent:</p>
+                                <ol>
+                                    <li>It retrieves the agent's current <code>boost_amount</code>.</li>
+                                    <li>It applies the <code>activation_fn</code> to this boost amount.</li>
+                                    <li>It then multiplies the result by a calculated value that accounts for the time elapsed since the last reward calculation. This ensures the reward is consistent regardless of how many game ticks have passed. The longer the agent maintains its boost, the more cumulative reward it earns.</li>
+                                </ol>
+                                
+                                <h5>State Management (reset)</h5>
+                                <p>The <code>reset</code> method is used to initialize the <code>prev_ticks</code> variable at the start of an episode, ensuring the reward calculation is accurate from the very beginning.</p>
+                                
+                                <p>In simple terms, this reward function encourages the agent to prioritize boost collection and management as part of its overall strategy. By rewarding the agent for simply having boost, it learns that maintaining high boost is a valuable goal. This can be especially useful for training agents to execute complex aerial maneuvers or maintain high speeds.</p>
+                            </div>
+                            
+                            <h4>Key Components</h4>
+                            <ul>
+                                <li><strong>Boost Amount</strong>: The current amount of boost the agent has, normalized between 0 and 1.</li>
+                                <li><strong>Activation Function</strong>: A function that transforms the boost amount before applying the reward. By default, it uses a square root function to make lower boost levels more valuable.</li>
+                                <li><strong>Reward Per Second</strong>: The maximum reward an agent can receive per second at full boost.</li>
+                            </ul>
+                            
+                            <h4>Parameters</h4>
+                            <table class="parameters-table">
+                                <thead>
+                                    <tr>
+                                        <th>Parameter</th>
+                                        <th>Type</th>
+                                        <th>Default</th>
+                                        <th>Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><code>reward_per_second</code></td>
+                                        <td><code>float</code></td>
+                                        <td><code>1.0</code></td>
+                                        <td>Amount of reward to give per second at full boost.</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>activation_fn</code></td>
+                                        <td><code>Callable[[float], float]</code></td>
+                                        <td><code>lambda x: math.sqrt(0.01 * x)</code></td>
+                                        <td>Function to transform the boost amount before applying the reward. The default is a square root function that makes lower boost levels more valuable.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            
+                            <h4>Usage Example</h4>
+                            <p>Here's how you can use the <code>BoostKeepReward</code> in your RLGym environment:</p>
+                            
+                            <div class="code-block">
+<pre><code class="language-python">from rlgym.api import make
+from boost_keep_reward import BoostKeepReward
+
+# Create the environment with BoostKeepReward
+env = make(
+    reward_fn=BoostKeepReward(
+        reward_per_second=0.5,  # Half the default reward rate
+        activation_fn=lambda x: x  # Linear scaling instead of square root
+    ),
+    # ... other environment parameters ...
+)
+
+# Now the environment will reward agents for maintaining boost
+obs = env.reset()
+done = False
+while not done:
+    # Your agent's action selection logic here
+    action = env.action_space.sample()
+    obs, reward, terminated, truncated, info = env.step(action)
+    done = terminated or truncated</code></pre>
+                            </div>
+                            
+                            <h4>Custom Activation Functions</h4>
+                            <p>You can customize how the reward scales with boost amount by providing your own activation function. Here are some examples:</p>
+                            
+                            <div class="code-block">
+<pre><code class="language-python"># Linear scaling (equal reward for all boost levels)
+linear_reward = BoostKeepReward(activation_fn=lambda x: x)
+
+# Quadratic scaling (heavily rewards high boost levels)
+quadratic_reward = BoostKeepReward(activation_fn=lambda x: x**2)
+
+# Step function (full reward above 50% boost, none below)
+step_reward = BoostKeepReward(activation_fn=lambda x: 1.0 if x > 0.5 else 0.0)
+
+# Custom curve with diminishing returns
+def custom_activation(boost):
+    return 1 - math.exp(-3 * boost)  # Approaches 1 as boost approaches 1
+
+custom_reward = BoostKeepReward(activation_fn=custom_activation)</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="training-section">
+                        <h2>Best Practices</h2>
+                        
+                        <h3>When to Use This Reward</h3>
+                        <p>The <code>BoostKeepReward</code> is particularly useful in the following scenarios:</p>
+                        <ul>
+                            <li><strong>Boost Management Training</strong>: Teaching agents to conserve boost for when it's most needed.</li>
+                            <li><strong>Balanced Play</strong>: Discouraging agents from using all their boost immediately.</li>
+                            <li><strong>Combination Rewards</strong>: Using alongside other reward functions to create a more comprehensive reward signal.</li>
+                        </ul>
+                        
+                        <h3>Combining with Other Rewards</h3>
+                        <p>For more sophisticated training, you can combine <code>BoostKeepReward</code> with other reward functions using RLGym's <code>CombinedReward</code>:</p>
+                        
+                        <div class="code-block">
+<pre><code class="language-python">from rlgym.api import CombinedReward
+from rlgym.rocket_league.rewards import VelocityPlayerToBallReward, TouchBallReward
+
+# Combine multiple rewards with different weights
+combined_reward = CombinedReward(
+    (BoostKeepReward(reward_per_second=0.5), 0.5),  # 50% weight to boost keeping
+    (VelocityPlayerToBallReward(), 0.3),           # 30% weight to moving toward ball
+    (TouchBallReward(), 0.2)                       # 20% weight to touching the ball
+)
+
+env = make(reward_fn=combined_reward)</code></pre>
+                        </div>
+                        
+                        <h3>Tuning Tips</h3>
+                        <ul>
+                            <li><strong>Start Small</strong>: Begin with a low <code>reward_per_second</code> (e.g., 0.1-0.5) to avoid overwhelming other rewards.</li>
+                            <li><strong>Adjust Activation</strong>: If agents are too conservative with boost, try a more linear activation function.</li>
+                            <li><strong>Monitor Behavior</strong>: Watch for agents that might learn to stay still to conserve boost and adjust rewards accordingly.</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="training-section">
+                        <h2>Advanced Usage</h2>
+                        
+                        <h3>Custom Reward Scaling</h3>
+                        <p>You can create more sophisticated reward scaling based on game state. For example, you might want to reduce the boost reward when the agent is near the ball to encourage more aggressive play:</p>
+                        
+                        <div class="code-block">
+<pre><code class="language-python">class AdaptiveBoostReward(RewardFunction[AgentID, GameState, float]):
+    def __init__(self, base_reward: float = 0.5, ball_proximity_threshold: float = 1000.0):
+        self.base_reward = base_reward / TICKS_PER_SECOND
+        self.ball_proximity_threshold = ball_proximity_threshold
+        self.prev_ticks = None
+    
+    def reset(self, agents: List[AgentID], initial_state: GameState, shared_info: Dict[str, Any]) -> None:
+        self.prev_ticks = initial_state.tick_count
+    
+    def get_rewards(self, agents: List[AgentID], state: GameState, 
+                   is_terminated: Dict[AgentID, bool], 
+                   is_truncated: Dict[AgentID, bool], 
+                   shared_info: Dict[str, Any]) -> Dict[AgentID, float]:
+        
+        ticks_passed = state.tick_count - self.prev_ticks
+        rewards = {}
+        
+        for agent in agents:
+            car = state.cars[agent]
+            boost = car.boost_amount
+            
+            # Calculate distance to ball
+            dist_to_ball = np.linalg.norm(car.position - state.ball.position)
+            
+            # Reduce reward when close to ball to encourage more aggressive play
+            proximity_factor = min(1.0, dist_to_ball / self.ball_proximity_threshold)
+            
+            # Apply activation function (square root by default)
+            activated_boost = math.sqrt(0.01 * boost)
+            
+            # Calculate final reward
+            rewards[agent] = activated_boost * self.base_reward * ticks_passed * proximity_factor
+        
+        self.prev_ticks = state.tick_count
+        return rewards</code></pre>
+                        </div>
+                        
+                        <h3>Visualizing Reward Curves</h3>
+                        <p>To better understand how different activation functions affect the reward, you can visualize them:</p>
+                        
+                        <div class="code-block">
+<pre><code class="language-python">import numpy as np
+import matplotlib.pyplot as plt
+
+def plot_activation_functions():
+    boost_levels = np.linspace(0, 1, 100)
+    
+    # Define different activation functions
+    activations = {
+        'Square Root': lambda x: np.sqrt(0.01 * x),
+        'Linear': lambda x: x,
+        'Quadratic': lambda x: x**2,
+        'Step (50%)': lambda x: 1.0 if x > 0.5 else 0.0,
+        'Diminishing Returns': lambda x: 1 - np.exp(-3 * x)
+    }
+    
+    plt.figure(figsize=(10, 6))
+    
+    for name, func in activations.items():
+        rewards = [func(x) for x in boost_levels]
+        plt.plot(boost_levels, rewards, label=name, linewidth=2)
+    
+    plt.title('Boost Reward Activation Functions')
+    plt.xlabel('Boost Amount (0-1)')
+    plt.ylabel('Reward Multiplier')
+    plt.legend()
+    plt.grid(True, alpha=0.3)
+    plt.tight_layout()
+    plt.show()
+
+# Run the visualization
+plot_activation_functions()</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <footer class="main-footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>LarryBot</h3>
+                    <p>Advanced Rocket League AI training and development tools.</p>
+                </div>
+                <div class="footer-section">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="../index.html">Home</a></li>
+                        <li><a href="../bot-tools.html">Bot Tools</a></li>
+                        <li><a href="../training-packs.html">Training Packs</a></li>
+                        <li><a href="../tutorials.html">Tutorials</a></li>
+                        <li><a href="../community.html">Community</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>Connect</h3>
+                    <div class="social-links">
+                        <a href="#" class="social-icon"><i class="fab fa-github"></i></a>
+                        <a href="#" class="social-icon"><i class="fab fa-discord"></i></a>
+                        <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="social-icon"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2023 LarryBot. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../script.js"></script>
+</body>
+</html>

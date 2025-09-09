@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="RLGym Reward Functions - Custom reward implementations for RL training">
+    <title>Rocket League Bot Training | RLGym Reward Functions</title>
+    <link rel="icon" type="image/png" href="https://www.freepnglogos.com/uploads/rocket-league-logo-png/rocket-league-logo-png-1.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <style>
+        .training-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        .training-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .training-header img {
+            max-width: 100%;
+            border-radius: 8px;
+            margin: 1rem 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            max-height: 400px;
+            object-fit: contain;
+        }
+        .training-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 1rem 0;
+            justify-content: center;
+        }
+        .tag {
+            background: #f0f4f8;
+            color: #2d3748;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            display: inline-block;
+            margin: 0.25rem;
+        }
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 1.5rem 0;
+            font-family: 'Fira Code', 'Courier New', monospace;
+            line-height: 1.6;
+            border: 1px solid #4a5568;
+            overflow-x: auto;
+            white-space: pre;
+            font-size: 0.9rem;
+        }
+        
+        /* Syntax highlighting colors */
+        .code-block .token.keyword { color: #ff79c6; }
+        .code-block .token.function { color: #50fa7b; }
+        .code-block .token.class-name { color: #8be9fd; }
+        .code-block .token.string { color: #f1fa8c; }
+        .code-block .token.comment { color: #6272a4; font-style: italic; }
+        .code-block .token.punctuation { color: #f8f8f2; }
+        .code-block .token.operator { color: #ff79c6; }
+        .code-block .token.number { color: #bd93f9; }
+        .code-block .token.constant { color: #bd93f9; }
+        .code-block .token.builtin { color: #50fa7b; }
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin: 1rem 0;
+            color: #4299e1;
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border: 1px solid #4299e1;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+        .back-button:hover {
+            background: #4299e1;
+            color: white;
+            text-decoration: none;
+        }
+        .training-description {
+            background: #f8fafc;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 2rem 0;
+            line-height: 1.6;
+        }
+        .training-description h2 {
+            color: #2d3748;
+            margin-top: 0;
+        }
+        .training-description p {
+            margin-bottom: 0;
+            color: #4a5568;
+        }
+    </style>
+</head>
+<body>
+    <header class="main-header">
+        <div class="container">
+            <nav class="navbar">
+                <a href="../index.html" class="logo">
+                    <img src="https://www.freepnglogos.com/uploads/rocket-league-logo-png/rocket-league-logo-png-1.png" alt="Rocket League Logo" class="rl-logo">
+                    <span>RL Bot Training</span>
+                </a>
+                <button class="hamburger" aria-label="Toggle navigation menu" aria-expanded="false">
+                    <span class="hamburger-box">
+                        <span class="hamburger-inner"></span>
+                    </span>
+                </button>
+                <ul class="nav-links">
+                    <li><a href="../index.html">Home</a></li>
+                    <li><a href="../training-packs.html">Training Codes</a></li>
+                    <li><a href="../bot-tools.html">Bot Tools</a></li>
+                    <li><a href="../tutorials.html">Tutorials</a></li>
+                    <li><a href="../community.html">Community</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="section">
+            <div class="container">
+                <a href="../training-packs.html" class="back-button">
+                    <i class="fas fa-arrow-left"></i> Back to Training Packs
+                </a>
+                
+                <div class="training-content">
+                    <div class="training-header">
+                        <h1>RLGym Reward Functions</h1>
+                        <img src="https://github.com/RLGym/rlgym-tools/raw/main/docs/source/_static/logo.png" alt="RLGym Logo" class="training-image">
+                        <div class="training-tags">
+                            <span class="tag">RLGym</span>
+                            <span class="tag">Reward Functions</span>
+                            <span class="tag">Machine Learning</span>
+                            <span class="tag">Python</span>
+                            <span class="tag">Advanced</span>
+                        </div>
+                    </div>
+                    
+                    <div class="training-description">
+                        <h2>Description</h2>
+                        <p>A collection of reward functions for RLGym that can be used to train RL agents. This example demonstrates how to implement custom rewards for RL training, including velocity-based rewards, alignment rewards, and touch rewards.</p>
+                    </div>
+                    
+                    <div class="training-code">
+                        <h2>Code</h2>
+                        <div class="code-block">
+<pre><code class="language-python"># Example RLGym Reward Function
+from rlgym.utils.reward_functions import RewardFunction
+from rlgym.utils.gamestates import GameState, PlayerData
+import numpy as np
+
+class CustomReward(RewardFunction):
+    def __init__(self):
+        super().__init__()
+        # Initialize any parameters here
+        self.velocity_weight = 0.1
+        self.alignment_weight = 0.3
+        
+    def reset(self, initial_state: GameState):
+        # Reset any state between episodes
+        pass
+    
+    def get_reward(self, player: PlayerData, state: GameState, 
+                  previous_action: np.ndarray) -> float:
+        # Calculate reward components
+        ball = state.ball
+        car = player.car_data
+        
+        # 1. Velocity reward (encourage moving towards ball)
+        velocity_reward = np.dot(car.linear_velocity, 
+                               ball.position - car.position) * self.velocity_weight
+        
+        # 2. Alignment reward (face towards ball)
+        to_ball = ball.position - car.position
+        to_ball_norm = to_ball / np.linalg.norm(to_ball)
+        alignment = np.dot(car.forward(), to_ball_norm)
+        alignment_reward = alignment * self.alignment_weight
+        
+        # 3. Touch reward (if ball was touched)
+        touch_reward = 1.0 if player.ball_touched else 0.0
+        
+        # Combine rewards
+        total_reward = velocity_reward + alignment_reward + touch_reward
+        return float(total_reward)
+</code></pre>
+</div>
+
+<div class="code-block">
+<pre><code class="language-python"># Usage example:
+from rlgym.utils.reward_functions import CombinedReward
+from rlgym_tools.extra_rewards import EventReward
+
+def get_reward():
+    return CombinedReward(
+        (CustomReward(), 1.0),
+        (EventReward(goal=10, concede=-10), 1.0)
+    )
+</code></pre>
+</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="main-footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Join Our Community</h3>
+                    <p>Connect with other bot developers and share your projects</p>
+                    <div class="social-links">
+                        <a href="https://github.com/RLBot/RLBot" target="_blank" rel="noopener noreferrer" aria-label="GitHub"><i class="fab fa-github"></i> RLBot GitHub</a>
+                        <a href="https://github.com/dxkku" target="_blank" rel="noopener noreferrer" aria-label="GitHub"><i class="fab fa-github"></i> My GitHub</a>
+                        <a href="https://discord.gg/fkG77fPmCd" target="_blank" rel="noopener noreferrer" aria-label="Discord"><i class="fab fa-discord"></i> Discord</a>
+                        <a href="https://www.reddit.com/r/RocketLeagueBots/" target="_blank" rel="noopener noreferrer" aria-label="Reddit"><i class="fab fa-reddit"></i> Reddit</a>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="../index.html">Home</a></li>
+                        <li><a href="../training-packs.html">Training Codes</a></li>
+                        <li><a href="../bot-tools.html">Bot Tools</a></li>
+                        <li><a href="../tutorials.html">Tutorials</a></li>
+                        <li><a href="../community.html">Community</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Rocket League Bot Training. Not affiliated with Psyonix or Epic Games.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../script.js"></script>
+</body>
+</html>

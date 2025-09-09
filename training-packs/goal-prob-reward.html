@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Goal Probability Reward - A reward function for RLGym that rewards agents based on the probability of scoring">
+    <title>Rocket League Bot Training | Goal Probability Reward</title>
+    <link rel="icon" type="image/png" href="https://www.freepnglogos.com/uploads/rocket-league-logo-png/rocket-league-logo-png-1.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <style>
+        .training-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: rgba(26, 32, 44, 0.9);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            color: #ffffff;
+            line-height: 1.6;
+        }
+        
+        .training-background {
+            background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.8)), 
+                        url('https://images.unsplash.com/photo-1569505840673-3f5b24b6c1d9?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80');
+            background-size: cover;
+            background-position: center;
+            padding: 4rem 2rem;
+        }
+        
+        .training-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 2rem;
+            background: rgba(26, 32, 44, 0.8);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .training-header h1 {
+            color: #ffffff;
+            margin-bottom: 0.5rem;
+            font-size: 2.5rem;
+        }
+        
+        .training-header p {
+            color: #a0aec0;
+            font-size: 1.1rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .training-section {
+            margin-bottom: 3rem;
+            background: rgba(26, 32, 44, 0.6);
+            padding: 1.5rem;
+            border-radius: 8px;
+            border-left: 4px solid #4299e1;
+        }
+        
+        .training-section h2 {
+            color: #63b3ed;
+            margin-top: 0;
+            margin-bottom: 1.5rem;
+            font-size: 1.75rem;
+            border-bottom: 1px solid #2d3748;
+            padding-bottom: 0.5rem;
+        }
+        
+        .training-section h3 {
+            color: #90cdf4;
+            margin-top: 1.5rem;
+            margin-bottom: 1rem;
+            font-size: 1.4rem;
+        }
+        
+        .training-section h4 {
+            color: #a0aec0;
+            margin-top: 1.25rem;
+            margin-bottom: 0.75rem;
+            font-size: 1.1rem;
+        }
+        
+        .training-section p, .training-section li {
+            color: #e2e8f0;
+            font-size: 1rem;
+            line-height: 1.7;
+        }
+        
+        .training-section ul, .training-section ol {
+            padding-left: 1.5rem;
+            margin: 1rem 0;
+        }
+        
+        .training-section li {
+            margin-bottom: 0.5rem;
+        }
+        
+        code, pre {
+            font-family: 'Fira Code', monospace;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 4px;
+            padding: 0.2rem 0.4rem;
+            font-size: 0.9em;
+        }
+        
+        pre {
+            padding: 1rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+            border-radius: 6px;
+            position: relative;
+            background: #1e1e1e;
+            border: 1px solid #2d3748;
+        }
+        
+        pre code {
+            background: transparent;
+            padding: 0;
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+        
+        .code-block {
+            position: relative;
+            margin: 1.5rem 0;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .code-header {
+            display: flex;
+            justify-content: flex-end;
+            background: #2d3748;
+            padding: 0.5rem 1rem;
+            border-bottom: 1px solid #1a202c;
+        }
+        
+        .copy-btn {
+            background: #2d3748;
+            color: #a0aec0;
+            border: 1px solid #4a5568;
+            border-radius: 4px;
+            padding: 0.25rem 0.75rem;
+            cursor: pointer;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s ease;
+        }
+        
+        .copy-btn:hover {
+            background: #4a5568;
+            color: #ffffff;
+        }
+        
+        .copy-btn.copied {
+            background: #48bb78;
+            color: white;
+            border-color: #2f855a;
+        }
+        
+        .reward-documentation {
+            background: rgba(26, 32, 44, 0.5);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 1.5rem 0;
+            border-left: 4px solid #4299e1;
+        }
+        
+        .reward-component {
+            margin: 2rem 0;
+            padding: 1.5rem;
+            background: rgba(26, 32, 44, 0.5);
+            border-radius: 8px;
+            border-left: 4px solid #4299e1;
+        }
+        
+        .reward-component h4 {
+            color: #63b3ed;
+            margin-top: 0;
+            font-size: 1.2rem;
+        }
+        
+        .parameters-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            background: rgba(26, 32, 44, 0.7);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .parameters-table th, 
+        .parameters-table td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid #2d3748;
+        }
+        
+        .parameters-table th {
+            background: rgba(26, 32, 44, 0.9);
+            color: #63b3ed;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+        }
+        
+        .parameters-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .parameters-table code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9em;
+            color: #f6ad55;
+        }
+        
+        .tag {
+            display: inline-block;
+            background: rgba(66, 153, 225, 0.2);
+            color: #63b3ed;
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin: 0.2rem;
+            white-space: nowrap;
+        }
+        
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            color: #90cdf4;
+            text-decoration: none;
+            margin-bottom: 1.5rem;
+            transition: color 0.2s ease;
+        }
+        
+        .back-button:hover {
+            color: #63b3ed;
+            text-decoration: underline;
+        }
+        
+        .back-button i {
+            margin-right: 0.5rem;
+        }
+        
+        .component-method {
+            background: rgba(45, 55, 72, 0.5);
+            border-radius: 6px;
+            padding: 1.25rem;
+            margin: 1.25rem 0;
+            border-left: 3px solid #63b3ed;
+        }
+        
+        .component-method h5 {
+            color: #90cdf4;
+            margin-top: 0;
+            margin-bottom: 0.75rem;
+            font-size: 1.05rem;
+            display: flex;
+            align-items: center;
+        }
+        
+        .component-method h5::before {
+            content: '»';
+            color: #63b3ed;
+            margin-right: 0.5rem;
+            font-size: 1.2em;
+        }
+        
+        .component-method ul, .component-method ol {
+            margin: 0.75rem 0 0.5rem 1.5rem;
+            padding-left: 0.5rem;
+        }
+        
+        .component-method li {
+            margin-bottom: 0.4rem;
+            color: #e2e8f0;
+        }
+        
+        .component-method code {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9em;
+            color: #f6ad55;
+        }
+        
+        @media (max-width: 768px) {
+            .training-content {
+                padding: 1.5rem;
+            }
+            
+            .training-header h1 {
+                font-size: 2rem;
+            }
+            
+            .training-header p {
+                font-size: 1rem;
+            }
+            
+            .training-section {
+                padding: 1.25rem;
+            }
+            
+            pre {
+                padding: 0.75rem;
+                font-size: 0.85em;
+            }
+        }
+    </style>
+    <script>
+        // Add copy button to all code blocks
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add copy button to each code block
+            document.querySelectorAll('pre').forEach((codeBlock, index) => {
+                // Create copy button
+                const button = document.createElement('button');
+                button.className = 'copy-btn';
+                button.innerHTML = '<i class="far fa-copy"></i>';
+                button.setAttribute('aria-label', 'Copy code');
+                
+                // Create container for the button
+                const container = document.createElement('div');
+                container.className = 'code-header';
+                container.style.display = 'flex';
+                container.style.justifyContent = 'flex-end';
+                
+                // Insert the button before the pre element
+                const pre = codeBlock.parentNode;
+                if (pre.parentNode) {
+                    pre.parentNode.insertBefore(container, pre);
+                    container.appendChild(button);
+                }
+
+                button.addEventListener('click', function() {
+                    // Create a temporary textarea to copy from
+                    const textarea = document.createElement('textarea');
+                    textarea.value = codeBlock.textContent;
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    
+                    try {
+                        // Copy the text
+                        document.execCommand('copy');
+                        button.innerHTML = '<i class="fas fa-check"></i>';
+                        button.classList.add('copied');
+                        
+                        // Reset button after 2 seconds
+                        setTimeout(function() {
+                            button.innerHTML = '<i class="far fa-copy"></i>';
+                            button.classList.remove('copied');
+                        }, 2000);
+                    } catch (err) {
+                        console.error('Failed to copy text: ', err);
+                    }
+                    
+                    // Clean up
+                    document.body.removeChild(textarea);
+                });
+            });
+        });
+    </script>
+</head>
+<body>
+    <header class="main-header">
+        <div class="container">
+            <nav class="navbar">
+                <a href="../index.html" class="logo">
+                    <img src="https://www.freepnglogos.com/uploads/rocket-league-logo-png/rocket-league-logo-png-1.png" alt="Rocket League Logo" class="rl-logo">
+                    <span>RL Bot Training</span>
+                </a>
+                <button class="hamburger" aria-label="Toggle navigation menu" aria-expanded="false">
+                    <span class="hamburger-box">
+                        <span class="hamburger-inner"></span>
+                    </span>
+                </button>
+                <ul class="nav-links">
+                    <li><a href="../index.html">Home</a></li>
+                    <li><a href="../training-packs.html" class="active">Training Packs</a></li>
+                    <li><a href="../bot-tools.html">Bot Tools</a></li>
+                    <li><a href="../tutorials.html">Tutorials</a></li>
+                    <li><a href="../community.html">Community</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <div class="training-background">
+        <section class="section">
+            <div class="container">
+                <a href="../training-packs.html" class="back-button">
+                    <i class="fas fa-arrow-left"></i> Back to Training Packs
+                </a>
+                
+                <div class="training-content">
+                    <div class="training-header">
+                        <h1>Goal Probability Reward</h1>
+                        <p>A sophisticated reward function that rewards agents based on the probability of scoring, encouraging strategic positioning and shot selection.</p>
+                        
+                        <div class="training-tags">
+                            <span class="tag"><i class="fas fa-robot"></i> RLGym</span>
+                            <span class="tag"><i class="fas fa-star"></i> Reward Function</span>
+                            <span class="tag"><i class="fas fa-bullseye"></i> Goal Scoring</span>
+                            <span class="tag"><i class="fas fa-code"></i> Python</span>
+                        </div>
+                    </div>
+                    
+                    <div class="training-section">
+                        <h2>Overview</h2>
+                        <p>The <code>GoalProbReward</code> is a reward function designed to encourage strategic play by rewarding agents based on the probability of scoring. It implements a reward shaping function that follows Ng et al.'s (1999) theorem for preserving optimal policies.</p>
+                        
+                        <div class="reward-documentation">
+                            <h3>How It Works</h3>
+                            <p>The <code>GoalProbReward</code> class and its subclass <code>GoalViewReward</code> implement a reward shaping function designed for use in a Rocket League reinforcement learning environment. These classes guide an agent's behavior by providing intermediate rewards based on its progress toward scoring goals.</p>
+                            
+                            <h4>GoalProbReward Class</h4>
+                            <p>This class provides a framework for a potential-based reward shaping function, ensuring the optimal policy of a reinforcement learning model isn't changed when introducing reward shaping.</p>
+                            
+                            <div class="component-method">
+                                <h5>Core Concept</h5>
+                                <p>Based on Ng et al.'s (1999) theorem, the reward shaping function maintains the optimal policy when using the form:</p>
+                                <p><code>F(s, a, s') = γ * Φ(s') - Φ(s)</code></p>
+                                <p>Where:</p>
+                                <ul>
+                                    <li><code>γ</code> is the discount factor (same as in the MDP)</li>
+                                    <li><code>Φ(s)</code> is a potential function estimating the state's value</li>
+                                    <li>The reward is the difference in potential between states, scaled by γ</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="component-method">
+                                <h5>Implementation Details</h5>
+                                <ul>
+                                    <li><strong>Reward Calculation</strong>: <code>2 * (γ * prob - self.prob)</code></li>
+                                    <li>The factor of 2 scales the reward range to [-1, 1]</li>
+                                    <li>Automatically handles both teams by inverting rewards for orange team</li>
+                                    <li>Abstract <code>calculate_blue_goal_prob</code> method must be implemented by subclasses</li>
+                                </ul>
+                            </div>
+                            
+                            <h4>GoalViewReward Class</h4>
+                            <p>This concrete implementation estimates goal probability based on the relative apparent size of the goals from the ball's perspective.</p>
+                            
+                            <div class="component-method">
+                                <h5>Core Concept</h5>
+                                <p>Imagine a camera at the ball's location - the larger a goal appears, the more likely a random shot would score. This geometric approach provides an intuitive measure of scoring potential.</p>
+                                <p>Probability calculation: <code>view_orange / (view_blue + view_orange)</code></p>
+                            </div>
+                            
+                            <div class="component-method">
+                                <h5>Key Features</h5>
+                                <ul>
+                                    <li>Uses solid angle calculations to determine goal visibility</li>
+                                    <li>Automatically adjusts for ball position and orientation</li>
+                                    <li>Provides smooth, continuous reward signals</li>
+                                    <li>No physics simulation required - fast to compute</li>
+                                </ul>
+                            </div>
+                            
+                            <h4>Key Components</h4>
+                            <p>The class is built around three main methods:</p>
+                            
+                            <div class="component-method">
+                                <h5><code>__init__</code> Method</h5>
+                                <p>Initializes the reward function with configurable parameters:</p>
+                                <ul>
+                                    <li><code>gamma</code>: Discount factor for reward shaping (default: 1.0)</li>
+                                    <li>Internal state for tracking goal probability</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="component-method">
+                                <h5><code>reset</code> Method</h5>
+                                <p>Prepares the reward function for a new episode:</p>
+                                <ul>
+                                    <li>Calculates initial goal probability</li>
+                                    <li>Stores the initial state's potential</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="component-method">
+                                <h5><code>get_rewards</code> Method</h5>
+                                <p>Core method that calculates rewards each step:</p>
+                                <ol>
+                                    <li>Gets current goal probability</li>
+                                    <li>Applies reward shaping formula</li>
+                                    <li>Adjusts for team colors</li>
+                                    <li>Updates stored probability</li>
+                                    <li>Returns rewards dictionary</li>
+                                </ol>
+                            </div>
+                            
+                            <h4>Included Implementations</h4>
+                            <p>The package includes a ready-to-use implementation:</p>
+                            
+                            <div class="component-method">
+                                <h5><code>GoalViewReward</code> Class</h5>
+                                <p>Estimates goal probability based on the apparent size of each goal from the ball's perspective:</p>
+                                <ul>
+                                    <li>Uses solid angle calculations</li>
+                                    <li>Simple but effective for basic positioning</li>
+                                    <li>No physics simulation required</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="training-section">
+                        <h2>Implementation</h2>
+                        <p>Here's the complete implementation of the Goal Probability Reward function:</p>
+                        
+                        <div class="code-block">
+                            <pre><code class="language-python">from typing import List, Dict, Any
+
+from rlgym.api import RewardFunction, AgentID
+from rlgym.rocket_league.api import GameState
+from rlgym.rocket_league.common_values import BLUE_TEAM
+
+from rlgym_tools.rocket_league.math.ball import GOAL_THRESHOLD
+from rlgym_tools.rocket_league.math.solid_angle import view_goal_ratio
+
+
+class GoalProbReward(RewardFunction[AgentID, GameState, float]):
+    def __init__(self, gamma: float = 1):
+        """
+        According to Ng. et al. (1999), a reward shaping function must be of the form:
+        F(s, a, s') = γ * Φ(s') - Φ(s)
+        to preserve all the optimal policies of the original MDP,
+        where Φ(s) is a function that estimates the potential of a state.
+        The gamma term is supposed to be the same as the one used to discount future rewards.
+        Here it serves to adjust for the fact that it will be discounted in the future.
+        In practice though, leaving it as 1 is probably fine.
+        (in fact the paper only deals with finite MDPs with γ=1 and infinite MDPs with γ<1,
+        whereas we typically have a finite MDP with γ<1)
+
+        :param gamma: the discount factor for the reward shaping function.
+        """
+        self.prob = None
+        self.gamma = gamma
+
+    def calculate_blue_goal_prob(self, state: GameState) -> float:
+        """
+        Calculate the probability of a goal being scored *by blue*, e.g. on the orange goal, from the current state.
+
+        :param state: the current game state
+        :return: the probability of a goal being scored by blue
+        """
+        raise NotImplementedError
+
+    def reset(self, agents: List[AgentID], initial_state: GameState, shared_info: Dict[str, Any]) -> None:
+        self.prob = self.calculate_blue_goal_prob(initial_state)
+
+    def get_rewards(self, agents: List[AgentID], state: GameState, is_terminated: Dict[AgentID, bool],
+                    is_truncated: Dict[AgentID, bool], shared_info: Dict[str, Any]) -> Dict[AgentID, float]:
+        if state.goal_scored:
+            if state.scoring_team == BLUE_TEAM:
+                prob = 1
+            else:
+                prob = 0
+        else:
+            prob = self.calculate_blue_goal_prob(state)
+        # Probability goes from 0-1, but for a reward we want it to go from -1 to 1
+        # 2x-1 - (2y-1) = 2(x-y)
+        reward = 2 * (self.gamma * prob - self.prob)
+        rewards = {
+            agent: reward if state.cars[agent].is_blue else -reward
+            for agent in agents
+        }
+        self.prob = prob
+        return rewards
+
+
+class GoalViewReward(GoalProbReward):
+    """
+    Simple estimate based on the apparent size of each goal.
+    Basically it says "if we cast a ray from the ball in random directions until it hits a goal,
+    what's the chance it hits the orange goal (blue scoring)?"
+    """
+
+    def calculate_blue_goal_prob(self, state: GameState) -> float:
+        ball_pos = state.ball.position
+        view_blue = view_goal_ratio(ball_pos, -GOAL_THRESHOLD)  # Blue net aka orange scoring
+        view_orange = view_goal_ratio(ball_pos, GOAL_THRESHOLD)  # Orange net aka blue scoring
+        return view_orange / (view_blue + view_orange)</code></pre>
+                        </div>
+                    </div>
+                    
+                    <div class="training-section">
+                        <h2>Usage Examples</h2>
+                        
+                        <div class="reward-component">
+                            <h4>Basic Usage</h4>
+                            <p>Here's how to use the default <code>GoalViewReward</code> implementation:</p>
+                            <div class="code-block">
+                                <pre><code class="language-python">from rlgym.envs import make
+from goal_prob_reward import GoalViewReward
+
+# Create environment with default parameters
+env = make(
+    reward_fn=GoalViewReward(gamma=0.99),
+    # ... other environment parameters
+)
+
+# Standard RL training loop
+obs = env.reset()
+done = False
+while not done:
+    actions = {}  # Get actions from your policy
+    next_obs, rewards, dones, infos = env.step(actions)
+    # ... training code here</code></pre>
+                            </div>
+                        </div>
+                        
+                        <div class="reward-component">
+                            <h4>Custom Implementation</h4>
+                            <p>Create your own goal probability estimator by subclassing <code>GoalProbReward</code>:</p>
+                            <div class="code-block">
+                                <pre><code class="language-python">class CustomGoalProbReward(GoalProbReward):
+    def calculate_blue_goal_prob(self, state: GameState) -> float:
+        """
+        Your custom goal probability calculation here.
+        Return a value between 0 (certain orange goal) and 1 (certain blue goal).
+        """
+        # Example: Simple distance-based probability
+        ball_pos = state.ball.position
+        
+        # Calculate distances to goals
+        dist_to_orange_goal = (ball_pos - ORANGE_GOAL_CENTER).length()
+        dist_to_blue_goal = (ball_pos - BLUE_GOAL_CENTER).length()
+        
+        # Convert to probability (closer to goal = higher probability)
+        total_dist = dist_to_orange_goal + dist_to_blue_goal
+        return dist_to_orange_goal / total_dist</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="training-section">
+                        <h2>Best Practices</h2>
+                        
+                        <div class="reward-component">
+                            <h4>When to Use</h4>
+                            <ul>
+                                <li><strong>Positioning Training</strong>: Helps agents learn optimal positioning for scoring opportunities</li>
+                                <li><strong>Team Play</strong>: Encourages passing and team coordination</li>
+                                <li><strong>Shot Selection</strong>: Rewards high-percentage shots over low-probability attempts</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="reward-component">
+                            <h4>Tips for Implementation</h4>
+                            <ul>
+                                <li><strong>Combine with Other Rewards</strong>: Use alongside velocity and touch rewards for better results</li>
+                                <li><strong>Gamma Tuning</strong>: Adjust gamma based on your discount factor</li>
+                                <li><strong>Custom Probability</strong>: Implement your own probability estimation for domain-specific behavior</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="training-section">
+                        <h2>Advanced Topics</h2>
+                        
+                        <div class="reward-component">
+                            <h4>Custom Probability Models</h4>
+                            <p>For more accurate results, consider implementing advanced probability models:</p>
+                            <ul>
+                                <li><strong>Physics-based</strong>: Simulate ball trajectories</li>
+                                <li><strong>Learning-based</strong>: Train a neural network to predict goal probability</li>
+                                <li><strong>Hybrid</strong>: Combine multiple approaches</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="reward-component">
+                            <h4>Performance Considerations</h4>
+                            <ul>
+                                <li><strong>Optimization</strong>: Cache expensive calculations</li>
+                                <li><strong>Batch Processing</strong>: Process multiple states simultaneously</li>
+                                <li><strong>Approximation</strong>: Use simplified models for faster computation</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <footer class="main-footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Join Our Community</h3>
+                    <p>Connect with other bot developers and share your projects</p>
+                    <div class="social-links">
+                        <a href="https://github.com/RLBot/RLBot" target="_blank" rel="noopener noreferrer" aria-label="GitHub"><i class="fab fa-github"></i> RLBot GitHub</a>
+                        <a href="https://github.com/dxkku" target="_blank" rel="noopener noreferrer" aria-label="GitHub"><i class="fab fa-github"></i> My GitHub</a>
+                        <a href="https://discord.gg/fkG77fPmCd" target="_blank" rel="noopener noreferrer" aria-label="Discord"><i class="fab fa-discord"></i> Discord</a>
+                        <a href="https://www.reddit.com/r/RocketLeagueBots/" target="_blank" rel="noopener noreferrer" aria-label="Reddit"><i class="fab fa-reddit"></i> Reddit</a>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="../index.html">Home</a></li>
+                        <li><a href="../training-packs.html">Training Packs</a></li>
+                        <li><a href="../bot-tools.html">Bot Tools</a></li>
+                        <li><a href="../tutorials.html">Tutorials</a></li>
+                        <li><a href="../community.html">Community</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Rocket League Bot Training. Not affiliated with Psyonix or Epic Games.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../script.js"></script>
+</body>
+</html>

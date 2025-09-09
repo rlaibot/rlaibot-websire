@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Flip Reset Reward Function for RLGym - A reward function that encourages flip resets in Rocket League">
+    <title>Rocket League Bot Training | Flip Reset Reward</title>
+    <link rel="icon" type="image/png" href="https://www.freepnglogos.com/uploads/rocket-league-logo-png/rocket-league-logo-png-1.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <script>
+        // Add copy button to all code blocks
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add copy button to each code block
+            document.querySelectorAll('pre code').forEach(function(codeBlock) {
+                const button = document.createElement('button');
+                button.className = 'copy-button';
+                button.type = 'button';
+                button.title = 'Copy to clipboard';
+                button.innerHTML = '<i class="far fa-copy"></i>';
+                
+                // Create container for the button
+                const container = document.createElement('div');
+                container.className = 'code-header';
+                container.style.display = 'flex';
+                container.style.justifyContent = 'flex-end';
+                
+                // Insert the button before the pre element
+                const pre = codeBlock.parentNode;
+                if (pre.parentNode) {
+                    pre.parentNode.insertBefore(container, pre);
+                    container.appendChild(button);
+                }
+
+                button.addEventListener('click', function() {
+                    // Create a temporary textarea to copy from
+                    const textarea = document.createElement('textarea');
+                    textarea.value = codeBlock.textContent;
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    
+                    try {
+                        // Copy the text
+                        document.execCommand('copy');
+                        button.innerHTML = '<i class="fas fa-check"></i>';
+                        button.classList.add('copied');
+                        
+                        // Reset button after 2 seconds
+                        setTimeout(function() {
+                            button.innerHTML = '<i class="far fa-copy"></i>';
+                            button.classList.remove('copied');
+                        }, 2000);
+                    } catch (err) {
+                        console.error('Failed to copy text: ', err);
+                    }
+                    
+                    // Clean up
+                    document.body.removeChild(textarea);
+                });
+            });
+        });
+    </script>
+    <style>
+        .training-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: rgba(26, 32, 44, 0.9);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .training-background {
+            background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.8)), 
+                        url('https://images.unsplash.com/photo-1569505840673-3f5b24b6c1d9?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80');
+            background-size: cover;
+            background-position: center;
+            padding: 4rem 0;
+            margin-top: -1rem;
+        }
+        
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #90cdf4;
+            text-decoration: none;
+            margin-bottom: 1.5rem;
+            font-weight: 500;
+            transition: color 0.2s ease;
+        }
+        
+        .back-button:hover {
+            color: #63b3ed;
+        }
+        
+        .training-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 2rem;
+            background: rgba(26, 32, 44, 0.8);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .training-header h1 {
+            color: #ffffff;
+            margin-bottom: 0.5rem;
+        }
+        
+        .training-header p {
+            color: #a0aec0;
+            max-width: 800px;
+            margin: 0 auto 1.5rem;
+        }
+        
+        .training-tags {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 1.5rem;
+        }
+        
+        .tag {
+            background: rgba(49, 130, 206, 0.2);
+            color: #90cdf4;
+            padding: 0.4rem 0.8rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            border: 1px solid rgba(99, 179, 237, 0.3);
+        }
+        
+        .training-section {
+            margin-bottom: 3rem;
+        }
+        
+        .training-section h2 {
+            color: #63b3ed;
+            margin: 2.5rem 0 1.5rem 0;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #2c5282;
+            font-weight: 600;
+            font-size: 1.75rem;
+        }
+        
+        .training-section h3 {
+            color: #90cdf4;
+            margin: 2rem 0 1rem 0;
+            font-weight: 500;
+            font-size: 1.4rem;
+        }
+        
+        .training-section p, .training-section li {
+            color: #e2e8f0;
+            line-height: 1.7;
+            margin-bottom: 1.2rem;
+        }
+        
+        .training-section ul, .training-section ol {
+            margin-bottom: 1.5rem;
+            padding-left: 1.8rem;
+        }
+        
+        .training-section ul li::marker {
+            color: #63b3ed;
+        }
+        
+        .training-section ol li::marker {
+            color: #63b3ed;
+            font-weight: bold;
+        }
+        
+        .code-block {
+            position: relative;
+            background: #1a202c;
+            color: #e2e8f0;
+            padding: 1.5rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+            font-family: 'Fira Code', 'Courier New', monospace;
+            border: 1px solid #2d3748;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        pre {
+            margin: 0;
+        }
+        
+        code {
+            font-family: 'Fira Code', 'Courier New', monospace;
+            font-size: 0.95rem;
+        }
+        
+        .code-header {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: -2rem;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .copy-button {
+            background: #2c5282;
+            color: white;
+            border: 1px solid #2b6cb0;
+            padding: 0.4rem 0.8rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            z-index: 10;
+        }
+        
+        .copy-button:hover {
+            background: #2b6cb0;
+        }
+        
+        .copy-button.copied {
+            background: #2f855a;
+            border-color: #38a169;
+        }
+        
+        .parameters-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            background: #1a202c;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .parameters-table th, 
+        .parameters-table td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid #2d3748;
+        }
+        
+        .parameters-table th {
+            background: #2d3748;
+            color: #90cdf4;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.05em;
+        }
+        
+        .parameters-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .parameters-table code {
+            background: rgba(45, 55, 72, 0.5);
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            color: #f6ad55;
+        }
+        .training-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 1rem 0;
+            justify-content: center;
+        }
+        .tag {
+            background: #f0f4f8;
+            color: #2d3748;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            display: inline-block;
+            margin: 0.25rem;
+        }
+        .copy-button {
+            background: #4299e1;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin: 0.5rem 0;
+        }
+        
+        .copy-button:hover {
+            background: #3182ce;
+        }
+        
+        .copy-button.copied {
+            background: #48bb78;
+        }
+        
+        .code-header {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: -2rem;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .code-block {
+            position: relative;
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 1.5rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+            font-family: 'Courier New', Courier, monospace;
+        }
+        pre {
+            margin: 0;
+        }
+        code {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.95rem;
+        }
+    </style>
+</head>
+<body>
+    <header class="main-header">
+        <div class="container">
+            <nav class="navbar">
+                <a href="../index.html" class="logo">
+                    <img src="https://www.freepnglogos.com/uploads/rocket-league-logo-png/rocket-league-logo-png-1.png" alt="Rocket League Logo" class="rl-logo">
+                    <span>RL Bot Training</span>
+                </a>
+                <button class="hamburger" aria-label="Toggle navigation menu" aria-expanded="false">
+                    <span class="hamburger-box">
+                        <span class="hamburger-inner"></span>
+                    </span>
+                </button>
+                <ul class="nav-links">
+                    <li><a href="../index.html">Home</a></li>
+                    <li><a href="../training-packs.html">Training Codes</a></li>
+                    <li><a href="../bot-tools.html">Bot Tools</a></li>
+                    <li><a href="../tutorials.html">Tutorials</a></li>
+                    <li><a href="../community.html">Community</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <div class="training-background">
+        <section class="section">
+            <div class="container">
+                <a href="../training-packs.html" class="back-button">
+                    <i class="fas fa-arrow-left"></i> Back to Training Packs
+                </a>
+                
+                <div class="training-content">
+                    <div class="training-header">
+                        <h1>Flip Reset Reward Function</h1>
+                        <p>A reward function that encourages agents to perform flip resets in Rocket League by rewarding successful flip resets and subsequent ball hits.</p>
+                        
+                        <div class="training-tags">
+                            <span class="tag"><i class="fas fa-robot"></i> RLGym</span>
+                            <span class="tag"><i class="fas fa-star"></i> Advanced</span>
+                            <span class="tag"><i class="fas fa-code"></i> Python</span>
+                            <span class="tag"><i class="fas fa-futbol"></i> Mechanics</span>
+                        </div>
+                    </div>
+
+                    <div class="training-section">
+                        <h2>Parameters Reference</h2>
+                        <table class="parameters-table">
+                            <thead>
+                                <tr>
+                                    <th>Parameter</th>
+                                    <th>Type</th>
+                                    <th>Default</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>obtain_flip_weight</code></td>
+                                    <td>float</td>
+                                    <td>1.0</td>
+                                    <td>Reward multiplier for successfully obtaining a flip reset</td>
+                                </tr>
+                                <tr>
+                                    <td><code>hit_ball_weight</code></td>
+                                    <td>float</td>
+                                    <td>1.0</td>
+                                    <td>Reward multiplier for hitting the ball after a flip reset</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="training-section">
+                        <h2>About This Reward Function</h2>
+                        <p>This reward function is designed to train RL agents to perform flip resets in Rocket League. It rewards agents for:</p>
+                        <ul>
+                            <li>Successfully obtaining a flip reset by hitting the ball with the wheels</li>
+                            <li>Successfully hitting the ball after performing a flip reset</li>
+                        </ul>
+                        <p>The function uses cosine similarity to determine if the car's wheels made sufficient contact with the ball to count as a flip reset.</p>
+                    </div>
+
+                    <div class="code-section">
+                        <div class="code-block">
+                            <pre><code class="language-python">from typing import List, Dict, Any
+
+from rlgym.api import RewardFunction, AgentID
+from rlgym.rocket_league.api import GameState
+from rlgym.rocket_league.math import cosine_similarity
+
+
+class FlipResetReward(RewardFunction[AgentID, GameState, float]):
+    def __init__(self, obtain_flip_weight: float = 1.0, hit_ball_weight: float = 1.0):
+        self.obtain_flip_weight = obtain_flip_weight
+        self.hit_ball_weight = hit_ball_weight
+
+        self.prev_state = None
+        self.has_reset = None
+        self.has_flipped = None
+
+    def reset(self, agents: List[AgentID], initial_state: GameState, shared_info: Dict[str, Any]) -> None:
+        self.prev_state = initial_state
+        self.has_reset = set()
+        self.has_flipped = set()
+
+    def get_rewards(self, agents: List[AgentID], state: GameState, is_terminated: Dict[AgentID, bool],
+                    is_truncated: Dict[AgentID, bool], shared_info: Dict[str, Any]) -> Dict[AgentID, float]:
+        rewards = {k: 0.0 for k in agents}
+        for agent in agents:
+            car = state.cars[agent]
+            if car.ball_touches > 0 and car.has_flip and not self.prev_state.cars[agent].has_flip:
+                down = -car.physics.up
+                car_ball = state.ball.position - car.physics.position
+                cossim_down_ball = cosine_similarity(down, car_ball)
+                if cossim_down_ball > 0.5 ** 0.5:  # 45 degrees
+                    self.has_reset.add(agent)
+                    rewards[agent] = self.obtain_flip_weight
+            elif car.on_ground:
+                self.has_reset.discard(agent)
+                self.has_flipped.discard(agent)
+            elif car.is_flipping and agent in self.has_reset:
+                self.has_reset.remove(agent)
+                self.has_flipped.add(agent)
+            if car.ball_touches > 0 and agent in self.has_flipped:
+                self.has_flipped.remove(agent)
+                rewards[agent] = self.hit_ball_weight
+        self.prev_state = state
+        return rewards</code></pre>
+                    </div>
+
+                    <div class="training-description">
+                        <h2>How the Reward System Works</h2>
+                        <p>The reward function provides positive reinforcement to the agent for achieving specific goals related to the flip reset maneuver. The rewards are based on two main events:</p>
+                        
+                        <h3>1. Obtaining a Flip Reset</h3>
+                        <p>The agent gets a reward (<code>obtain_flip_weight</code>) when it successfully hits the ball with all four wheels while in the air, which is the condition for regaining a flip. The code checks for several conditions to confirm this:</p>
+                        <ul>
+                            <li>The car touches the ball.</li>
+                            <li>The car's <code>has_flip</code> state becomes <code>True</code> in the current frame, but was <code>False</code> in the previous frame.</li>
+                            <li>The car's "down" direction (opposite of its "up" vector) is pointing within a 45-degree cone toward the ball, ensuring proper positioning for a flip reset.</li>
+                        </ul>
+
+                        <h3>2. Hitting the Ball After a Flip Reset</h3>
+                        <p>A second reward (<code>hit_ball_weight</code>) is given when the agent uses its newly regained flip to hit the ball again. This encourages the agent to not just obtain the flip, but to also utilize it effectively in a combo play.</p>
+
+                        <h3>State Management</h3>
+                        <p>The class uses internal sets, <code>self.has_reset</code> and <code>self.has_flipped</code>, to track the state of each agent:</p>
+                        <ul>
+                            <li><code>self.has_reset</code> tracks which agents have successfully obtained a flip reset but haven't used the flip yet.</li>
+                            <li>This state is reset whenever the car touches the ground, marking the end of an aerial sequence.</li>
+                        </ul>
+
+                        <h3>Key Parameters</h3>
+                        <ul>
+                            <li><code>obtain_flip_weight</code>: Determines the reward for successfully obtaining a flip reset.</li>
+                            <li><code>hit_ball_weight</code>: Determines the reward for using the flip to hit the ball again.</li>
+                        </ul>
+                        
+                        <p>By adjusting these weights, you can fine-tune the training process. A higher <code>obtain_flip_weight</code> prioritizes learning the maneuver itself, while a higher <code>hit_ball_weight</code> encourages the agent to focus on follow-up plays.</p>
+                    </div>
+
+                    <div class="code-section">
+                        <div class="code-block">
+                            <pre><code class="language-python"># Usage Example
+from rlgym.utils.reward_functions import CombinedReward
+from rlgym_tools.extra_rewards import EventReward
+
+def get_reward():
+    return CombinedReward(
+        (FlipResetReward(obtain_flip_weight=1.0, hit_ball_weight=2.0), 1.0),
+        (EventReward(goal=10, concede=-10), 1.0)
+    )</code></pre>
+                            </div>
+                        </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <footer class="main-footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Join Our Community</h3>
+                    <p>Connect with other bot developers and share your projects</p>
+                    <div class="social-links">
+                        <a href="https://github.com/RLBot/RLBot" target="_blank" rel="noopener noreferrer" aria-label="GitHub"><i class="fab fa-github"></i> RLBot GitHub</a>
+                        <a href="https://github.com/dxkku" target="_blank" rel="noopener noreferrer" aria-label="GitHub"><i class="fab fa-github"></i> My GitHub</a>
+                        <a href="https://discord.gg/fkG77fPmCd" target="_blank" rel="noopener noreferrer" aria-label="Discord"><i class="fab fa-discord"></i> Discord</a>
+                        <a href="https://www.reddit.com/r/RocketLeagueBots/" target="_blank" rel="noopener noreferrer" aria-label="Reddit"><i class="fab fa-reddit"></i> Reddit</a>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="../index.html">Home</a></li>
+                        <li><a href="../training-packs.html">Training Codes</a></li>
+                        <li><a href="../bot-tools.html">Bot Tools</a></li>
+                        <li><a href="../tutorials.html">Tutorials</a></li>
+                        <li><a href="../community.html">Community</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>Design by Niro | Website by dxkku</p>
+                <p>&copy; 2025 Rocket League Bot Training. Not affiliated with Psyonix or Epic Games.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../script.js"></script>
+</body>
+</html>

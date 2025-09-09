@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Rocket League Bot Tutorials - Learn how to create and train Rocket League bots">
+    <title>Rocket League Bot Training | Tutorials</title>
+    <link rel="icon" type="image/png" href="https://www.freepnglogos.com/uploads/rocket-league-logo-png/rocket-league-logo-png-1.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="main-header">
+        <div class="container">
+            <nav class="navbar">
+                <a href="index.html" class="logo">
+                    <img src="https://www.freepnglogos.com/uploads/rocket-league-logo-png/rocket-league-logo-png-1.png" alt="Rocket League Logo" class="rl-logo">
+                    <span>RL Bot Training</span>
+                </a>
+                <button class="hamburger" aria-label="Toggle navigation menu" aria-expanded="false">
+                    <span class="hamburger-box">
+                        <span class="hamburger-inner"></span>
+                    </span>
+                </button>
+                <ul class="nav-links">
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="training-packs.html">Training Codes</a></li>
+                    <li><a href="bot-tools.html">Bot Tools</a></li>
+                    <li><a href="tutorials.html">Tutorials</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero hero-small">
+            <div class="container">
+                <h1>Tutorials & Guides</h1>
+                <p class="subtitle">Learn how to create and train your own Rocket League bots</p>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="container">
+                <div class="filters">
+                    <button class="filter-btn active" data-filter="all">All Tutorials</button>
+                    <button class="filter-btn" data-filter="beginner">Beginner</button>
+                    <button class="filter-btn" data-filter="intermediate">Intermediate</button>
+                    <button class="filter-btn" data-filter="advanced">Advanced</button>
+                </div>
+                
+                <div id="tutorials-container" class="tutorials-grid">
+                    <!-- Tutorials will be loaded by JavaScript -->
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="main-footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <div class="social-links">
+                        <a href="https://github.com/RLBot/RLBot" target="_blank" rel="noopener noreferrer" aria-label="GitHub"><i class="fab fa-github"></i> RLBot GitHub</a>
+                        <a href="https://github.com/dxkku" target="_blank" rel="noopener noreferrer" aria-label="GitHub"><i class="fab fa-github"></i> My GitHub</a>
+                        <a href="https://discord.gg/fkG77fPmCd" target="_blank" rel="noopener noreferrer" aria-label="Discord"><i class="fab fa-discord"></i> Discord</a>
+                        <a href="https://www.reddit.com/r/RocketLeagueBots/" target="_blank" rel="noopener noreferrer" aria-label="Reddit"><i class="fab fa-reddit"></i> Reddit</a>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="bot-tools.html">Bot Tools</a></li>
+                        <li><a href="tutorials.html">Tutorials</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Rocket League Bot Training. Not affiliated with Psyonix or Epic Games.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+        // Tutorials data
+        const tutorials = [
+            {
+                title: "Getting Started with RLBot",
+                description: "A beginner's guide to setting up the RLBot framework and creating your first bot.",
+                image: "https://i.ytimg.com/vi/eWzAsWZqnf8/maxresdefault.jpg",
+                tags: ["Tutorial", "Beginner", "Setup"],
+                url: "https://youtu.be/eWzAsWZqnf8",
+                level: "beginner",
+                duration: "15 min"
+            },
+            {
+                title: "Advanced Bot Strategies",
+                description: "Learn advanced techniques for creating competitive Rocket League bots, including rotation and positioning.",
+                image: "https://i.ytimg.com/vi/3KZ9QjEGEKQ/maxresdefault.jpg",
+                tags: ["Advanced", "Strategy", "AI"],
+                url: "https://youtu.be/3KZ9QjEGEKQ",
+                level: "advanced",
+                duration: "25 min"
+            },
+            {
+                title: "Machine Learning in Rocket League",
+                description: "Introduction to training AI agents using reinforcement learning for Rocket League.",
+                image: "https://miro.medium.com/max/1400/1*1t0Fv2yS4YqBz3pY2j0ZJQ.png",
+                tags: ["Machine Learning", "AI", "Python"],
+                url: "https://towardsdatascience.com/reinforcement-learning-in-rocket-league-7bcaa4c3c03",
+                level: "advanced",
+                duration: "30 min"
+            },
+            {
+                title: "Creating Your First Bot",
+                description: "Step-by-step guide to creating your very first Rocket League bot using Python.",
+                image: "https://i.ytimg.com/vi/9sV9kfX1ZQY/maxresdefault.jpg",
+                tags: ["Beginner", "Python", "Tutorial"],
+                url: "#",
+                level: "beginner",
+                duration: "20 min"
+            },
+            {
+                title: "Bot Pathfinding Techniques",
+                description: "Learn different pathfinding algorithms and how to implement them in your bot.",
+                image: "https://i.ytimg.com/vi/5qap5aO4i9A/maxresdefault.jpg",
+                tags: ["Intermediate", "Pathfinding", "Algorithms"],
+                url: "#",
+                level: "intermediate",
+                duration: "35 min"
+            },
+            {
+                title: "Optimizing Bot Performance",
+                description: "Tips and tricks to make your bot run faster and more efficiently.",
+                image: "https://i.ytimg.com/vi/6pLpr5hDh2w/maxresdefault.jpg",
+                tags: ["Performance", "Optimization", "Advanced"],
+                url: "#",
+                level: "advanced",
+                duration: "28 min"
+            }
+        ];
+
+        // Function to create tutorial cards
+        function createTutorialCard(tutorial) {
+            return `
+                <div class="tutorial-card" data-level="${tutorial.level}">
+                    <div class="tutorial-img" style="background-image: url('${tutorial.image}');">
+                        <div class="tutorial-overlay">
+                            <i class="fas fa-play-circle"></i>
+                            <span class="duration">${tutorial.duration}</span>
+                        </div>
+                    </div>
+                    <div class="tutorial-content">
+                        <div class="tutorial-level ${tutorial.level}">${tutorial.level}</div>
+                        <h3 class="tutorial-title">${tutorial.title}</h3>
+                        <p class="tutorial-description">${tutorial.description}</p>
+                        <div class="tutorial-tags">
+                            ${tutorial.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+                        </div>
+                        <a href="${tutorial.url}" class="btn btn-primary tutorial-btn" target="_blank">
+                            <i class="fas fa-play"></i> Watch Tutorial
+                        </a>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Filter tutorials
+        function filterTutorials(filter) {
+            const container = document.getElementById('tutorials-container');
+            if (!container) return;
+            
+            container.innerHTML = ''; // Clear existing content
+            
+            const filteredTutorials = filter === 'all' 
+                ? tutorials 
+                : tutorials.filter(tutorial => tutorial.level === filter);
+            
+            filteredTutorials.forEach(tutorial => {
+                container.innerHTML += createTutorialCard(tutorial);
+            });
+        }
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initial render
+            filterTutorials('all');
+            
+            // Filter buttons
+            const filterButtons = document.querySelectorAll('.filter-btn');
+            filterButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    // Update active state
+                    filterButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    
+                    // Filter tutorials
+                    const filter = button.getAttribute('data-filter');
+                    filterTutorials(filter);
+                });
+            });
+        });
+    </script>
+    <style>
+        /* Tutorial Grid Layout */
+        .tutorials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .tutorial-card {
+            background: var(--bg-white);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            border: 1px solid rgba(0, 194, 255, 0.1);
+        }
+
+        .tutorial-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px -5px rgba(0, 194, 255, 0.2);
+            border-color: rgba(0, 194, 255, 0.3);
+        }
+
+        .tutorial-img {
+            height: 200px;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tutorial-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .tutorial-card:hover .tutorial-overlay {
+            opacity: 1;
+        }
+
+        .tutorial-overlay i {
+            font-size: 4rem;
+            color: white;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .duration {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 0.8rem;
+        }
+
+        .tutorial-content {
+            padding: 1.5rem;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tutorial-level {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            text-transform: capitalize;
+            align-self: flex-start;
+        }
+
+        .tutorial-level.beginner {
+            background: rgba(46, 204, 113, 0.1);
+            color: #2ecc71;
+        }
+
+        .tutorial-level.intermediate {
+            background: rgba(241, 196, 15, 0.1);
+            color: #f1c40f;
+        }
+
+        .tutorial-level.advanced {
+            background: rgba(231, 76, 60, 0.1);
+            color: #e74c3c;
+        }
+
+        .tutorial-title {
+            font-size: 1.25rem;
+            margin-bottom: 0.75rem;
+            color: var(--text-color);
+        }
+
+        .tutorial-description {
+            color: var(--text-light);
+            margin-bottom: 1.5rem;
+            flex-grow: 1;
+            line-height: 1.6;
+        }
+
+        .tutorial-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .tutorial-btn {
+            margin-top: auto;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .tutorials-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</body>
+</html>

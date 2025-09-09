@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Boost Change Reward - A reward function for RLGym that rewards agents for managing their boost effectively">
+    <title>Rocket League Bot Training | Boost Change Reward</title>
+    <link rel="icon" type="image/png" href="https://www.freepnglogos.com/uploads/rocket-league-logo-png/rocket-league-logo-png-1.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <style>
+        .training-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: rgba(26, 32, 44, 0.9);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            color: #ffffff;
+            line-height: 1.6;
+        }
+        
+        .training-background {
+            background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.8)), 
+                        url('https://images.unsplash.com/photo-1569505840673-3f5b24b6c1d9?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80');
+            background-size: cover;
+            background-position: center;
+            padding: 4rem 2rem;
+        }
+        
+        .training-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 2rem;
+            background: rgba(26, 32, 44, 0.8);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .training-header h1 {
+            color: #ffffff;
+            margin-bottom: 0.5rem;
+            font-size: 2.5rem;
+        }
+        
+        .training-header p {
+            color: #cbd5e0;
+            font-size: 1.1rem;
+            max-width: 800px;
+            margin: 0 auto 1.5rem;
+        }
+        
+        .training-tags {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+        
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            background: rgba(99, 179, 237, 0.2);
+            color: #90cdf4;
+            padding: 0.4rem 0.8rem;
+            border-radius: 9999px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        
+        .tag i {
+            margin-right: 0.4rem;
+        }
+        
+        .training-section {
+            margin-bottom: 2.5rem;
+        }
+        
+        .training-section h2 {
+            color: #63b3ed;
+            margin-top: 0;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid rgba(99, 179, 237, 0.3);
+        }
+        
+        .training-section h3 {
+            color: #90cdf4;
+            margin-top: 1.8rem;
+            margin-bottom: 1rem;
+        }
+        
+        .training-section h4 {
+            color: #a0aec0;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+        
+        .training-section p, .training-section li {
+            color: #e2e8f0;
+            line-height: 1.7;
+            margin-bottom: 1rem;
+        }
+        
+        .training-section ul, .training-section ol {
+            margin-bottom: 1.5rem;
+            padding-left: 1.8rem;
+        }
+        
+        .training-section ul li::marker {
+            color: #63b3ed;
+        }
+        
+        .training-section ol li::marker {
+            color: #63b3ed;
+            font-weight: bold;
+        }
+        
+        .code-block {
+            position: relative;
+            margin: 1.5rem 0;
+            background: #1e1e1e;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+        
+        .code-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            background: #2d3748;
+            border-bottom: 1px solid #4a5568;
+        }
+        
+        .code-filename {
+            color: #cbd5e0;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.85rem;
+        }
+        
+        .copy-button {
+            background: transparent;
+            border: 1px solid #4a5568;
+            color: #cbd5e0;
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: all 0.2s ease;
+        }
+        
+        .copy-button:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .copy-button.copied {
+            background: #48bb78;
+            border-color: #48bb78;
+            color: white;
+        }
+        
+        pre[class*="language-"] {
+            margin: 0;
+            border-radius: 0 0 6px 6px;
+        }
+        
+        .parameters-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            background: #1a202c;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .parameters-table th, 
+        .parameters-table td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid #2d3748;
+        }
+        
+        .parameters-table th {
+            background: #2d3748;
+            color: #90cdf4;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.05em;
+        }
+        
+        .parameters-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .parameters-table code {
+            background: rgba(45, 55, 72, 0.5);
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            color: #f6ad55;
+        }
+        
+        /* Component styles */
+        .reward-component {
+            background: rgba(26, 32, 44, 0.8);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .reward-component h4 {
+            color: #63b3ed;
+            margin-top: 0;
+            border-bottom: 1px solid rgba(99, 179, 237, 0.3);
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .code-snippet {
+            background: #1e1e1e;
+            border-radius: 6px;
+            padding: 1rem;
+            margin: 1rem 0;
+            overflow-x: auto;
+            border: 1px solid #2d3748;
+        }
+        
+        .code-snippet pre {
+            margin: 0;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        
+        .state-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            background: #1a202c;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .state-table th, 
+        .state-table td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid #2d3748;
+        }
+        
+        .state-table th {
+            background: #2d3748;
+            color: #90cdf4;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.05em;
+        }
+        
+        .state-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .parameters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin: 1.5rem 0;
+        }
+        
+        .parameter {
+            background: rgba(26, 32, 44, 0.8);
+            border-radius: 8px;
+            padding: 1.25rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .parameter h4 {
+            color: #63b3ed;
+            margin-top: 0;
+            margin-bottom: 0.75rem;
+            font-size: 1rem;
+        }
+        
+        .parameter p {
+            margin: 0.5rem 0 0;
+            color: #cbd5e0;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+        
+        .component-method {
+            background: rgba(45, 55, 72, 0.5);
+            border-radius: 6px;
+            padding: 1.25rem;
+            margin: 1.25rem 0;
+            border-left: 3px solid #63b3ed;
+        }
+        
+        .component-method h5 {
+            color: #90cdf4;
+            margin-top: 0;
+            margin-bottom: 0.75rem;
+            font-size: 1.05rem;
+            display: flex;
+            align-items: center;
+        }
+        
+        .component-method h5::before {
+            content: '»';
+            color: #63b3ed;
+            margin-right: 0.5rem;
+            font-size: 1.2em;
+        }
+        
+        .component-method ul, .component-method ol {
+            margin: 0.75rem 0 0.5rem 1.5rem;
+            padding-left: 0.5rem;
+        }
+        
+        .component-method li {
+            margin-bottom: 0.4rem;
+            color: #e2e8f0;
+        }
+        
+        .component-method code {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9em;
+            color: #f6ad55;
+        }
+        
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            color: #90cdf4;
+            text-decoration: none;
+            margin-bottom: 1.5rem;
+            transition: color 0.2s ease;
+        }
+        
+        .back-button:hover {
+            color: #63b3ed;
+        }
+        
+        .back-button i {
+            margin-right: 0.5rem;
+        }
+        
+        @media (max-width: 768px) {
+            .training-content {
+                padding: 1.5rem;
+            }
+            
+            .training-header {
+                padding: 1.5rem 1rem;
+            }
+            
+            .training-header h1 {
+                font-size: 2rem;
+            }
+            
+            .code-block {
+                border-radius: 4px;
+            }
+            
+            pre[class*="language-"] {
+                font-size: 0.85rem;
+                padding: 1rem;
+            }
+            
+            .parameters-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+    <script>
+        // Add copy button to all code blocks
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add copy button to each code block
+            document.querySelectorAll('pre code').forEach(function(codeBlock) {
+                const button = document.createElement('button');
+                button.className = 'copy-button';
+                button.type = 'button';
+                button.title = 'Copy to clipboard';
+                button.innerHTML = '<i class="far fa-copy"></i>';
+                
+                // Create container for the button
+                const container = document.createElement('div');
+                container.className = 'code-header';
+                container.style.display = 'flex';
+                container.style.justifyContent = 'flex-end';
+                
+                // Insert the button before the pre element
+                const pre = codeBlock.parentNode;
+                if (pre.parentNode) {
+                    pre.parentNode.insertBefore(container, pre);
+                    container.appendChild(button);
+                }
+
+                button.addEventListener('click', function() {
+                    // Create a temporary textarea to copy from
+                    const textarea = document.createElement('textarea');
+                    textarea.value = codeBlock.textContent;
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    
+                    try {
+                        // Copy the text
+                        document.execCommand('copy');
+                        button.innerHTML = '<i class="fas fa-check"></i>';
+                        button.classList.add('copied');
+                        
+                        // Reset button after 2 seconds
+                        setTimeout(function() {
+                            button.innerHTML = '<i class="far fa-copy"></i>';
+                            button.classList.remove('copied');
+                        }, 2000);
+                    } catch (err) {
+                        console.error('Failed to copy text: ', err);
+                    }
+                    
+                    // Clean up
+                    document.body.removeChild(textarea);
+                });
+            });
+        });
+    </script>
+</head>
+<body>
+    <header class="main-header">
+        <div class="container">
+            <nav class="navbar">
+                <a href="../index.html" class="logo">
+                    <img src="https://www.freepnglogos.com/uploads/rocket-league-logo-png/rocket-league-logo-png-1.png" alt="Rocket League Logo" class="rl-logo">
+                    <span>RL Bot Training</span>
+                </a>
+                <button class="hamburger" aria-label="Toggle navigation menu" aria-expanded="false">
+                    <span class="hamburger-box">
+                        <span class="hamburger-inner"></span>
+                    </span>
+                </button>
+                <ul class="nav-links">
+                    <li><a href="../index.html">Home</a></li>
+                    <li><a href="../training-packs.html" class="active">Training Packs</a></li>
+                    <li><a href="../bot-tools.html">Bot Tools</a></li>
+                    <li><a href="../tutorials.html">Tutorials</a></li>
+                    <li><a href="../community.html">Community</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <div class="training-background">
+        <section class="section">
+            <div class="container">
+                <a href="../training-packs.html" class="back-button">
+                    <i class="fas fa-arrow-left"></i> Back to Training Packs
+                </a>
+                
+                <div class="training-content">
+                    <div class="training-header">
+                        <h1>Boost Change Reward</h1>
+                        <p>A sophisticated reward function that encourages effective boost management in RLGym, with configurable rewards for boost gain and loss.</p>
+                        
+                        <div class="training-tags">
+                            <span class="tag"><i class="fas fa-tag"></i> RLGym</span>
+                            <span class="tag"><i class="fas fa-battery-three-quarters"></i> Boost Management</span>
+                            <span class="tag"><i class="fas fa-robot"></i> AI Training</span>
+                            <span class="tag"><i class="fas fa-code"></i> Python</span>
+                        </div>
+                    </div>
+                    
+                    <div class="training-section">
+                        <h2>Overview</h2>
+                        <p>The <code>BoostChangeReward</code> is a reward function designed to encourage strategic boost management in Rocket League. It rewards agents for increasing their boost levels while penalizing them for unnecessary boost usage, promoting efficient boost conservation and collection.</p>
+                        
+                        <div class="reward-documentation">
+                            <h3>How It Works</h3>
+                            <p>The <code>BoostChangeReward</code> class is a reward function designed for the RLGym framework, specifically for training machine learning agents in Rocket League. It provides positive reinforcement when agents increase their boost and negative reinforcement when they decrease it, encouraging strategic boost management.</p>
+                            
+                            <h4>Core Functionality</h4>
+                            <p>The reward system operates through these key mechanisms:</p>
+                            <ul>
+                                <li><strong>Reward Calculation</strong>: Tracks the change in boost between simulation steps
+                                    <ul>
+                                        <li>Positive delta (boost increase) → Positive reward</li>
+                                        <li>Negative delta (boost decrease) → Negative reward (penalty)</li>
+                                        <li>No change → No reward</li>
+                                    </ul>
+                                </li>
+                                <li><strong>Configurable Weights</strong>:
+                                    <ul>
+                                        <li><code>gain_weight</code>: Scales rewards for boost collection</li>
+                                        <li><code>lose_weight</code>: Scales penalties for boost usage</li>
+                                    </ul>
+                                </li>
+                                <li><strong>Activation Function</strong>:
+                                    <ul>
+                                        <li>Processes raw boost values before delta calculation</li>
+                                        <li>Default: <code>math.sqrt(0.01 * x)</code> for non-linear scaling</li>
+                                        <li>Makes low boost levels more impactful</li>
+                                    </ul>
+                                </li>
+                            </ul>
+                            
+                            <h4>Key Components</h4>
+                            <p>The class is built around three main methods:</p>
+                            
+                            <div class="component-method">
+                                <h5><code>__init__</code> Method</h5>
+                                <p>Initializes the reward function with customizable parameters:</p>
+                                <ul>
+                                    <li><code>gain_weight</code>: Multiplier for boost increase rewards</li>
+                                    <li><code>lose_weight</code>: Multiplier for boost decrease penalties</li>
+                                    <li><code>activation_fn</code>: Function to process boost values (default: square root)</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="component-method">
+                                <h5><code>reset</code> Method</h5>
+                                <p>Prepares the reward function for a new episode:</p>
+                                <ul>
+                                    <li>Stores initial boost levels for all agents</li>
+                                    <li>Applies the activation function to initial values</li>
+                                    <li>Called at the start of each training episode</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="component-method">
+                                <h5><code>get_rewards</code> Method</h5>
+                                <p>Core method that calculates rewards each step:</p>
+                                <ol>
+                                    <li>Gets current boost levels for all agents</li>
+                                    <li>Applies activation function to current values</li>
+                                    <li>Calculates delta from previous values</li>
+                                    <li>Applies appropriate weights based on delta sign</li>
+                                    <li>Updates stored values for next step</li>
+                                    <li>Returns rewards dictionary</li>
+                                </ol>
+                            </div>
+                            
+                            <p>This reward system encourages agents to develop sophisticated boost management strategies, balancing the need for boost conservation with the benefits of using boost for offensive and defensive plays.</p>
+                            
+                            <div class="reward-component">
+                                <h4>1. Boost Gain Reward</h4>
+                                <p>Agents receive positive reinforcement when they collect boost pads or orbs:</p>
+                                <ul>
+                                    <li><strong>Small Pads</strong>: +12 boost (small reward)</li>
+                                    <li><strong>Big Pads</strong>: +100 boost (large reward)</li>
+                                    <li><strong>Activation Function</strong>: By default uses square root to make low boost levels more valuable</li>
+                                </ul>
+                                
+                                <div class="code-snippet">
+                                    <pre><code># Boost gain calculation
+if delta > 0:
+    reward = delta * gain_weight</code></pre>
+                                </div>
+                            </div>
+                            
+                            <div class="reward-component">
+                                <h4>2. Boost Loss Penalty</h4>
+                                <p>Agents are penalized for using boost, with configurable severity:</p>
+                                <ul>
+                                    <li><strong>Gradual Penalty</strong>: Scales with the amount of boost used</li>
+                                    <li><strong>Configurable Weight</strong>: Adjustable penalty multiplier</li>
+                                    <li><strong>Strategic Usage</strong>: Encourages efficient boost usage</li>
+                                </ul>
+                                
+                                <div class="code-snippet">
+                                    <pre><code># Boost loss calculation
+if delta < 0:
+    penalty = abs(delta) * lose_weight
+    reward = -penalty</code></pre>
+                                </div>
+                            </div>
+                            
+                            <h3>State Management</h3>
+                            <p>The function maintains important state between frames to calculate boost changes:</p>
+                            
+                            <table class="state-table">
+                                <tr>
+                                    <th>State Variable</th>
+                                    <th>Purpose</th>
+                                    <th>Update Frequency</th>
+                                </tr>
+                                <tr>
+                                    <td><code>prev_values</code></td>
+                                    <td>Stores each agent's previous boost amount</td>
+                                    <td>Updated every frame</td>
+                                </tr>
+                                <tr>
+                                    <td><code>activation_fn</code></td>
+                                    <td>Applies a function to boost values (default: √x)</td>
+                                    <td>Set during initialization</td>
+                                </tr>
+                            </table>
+                            
+                            <h3>Key Parameters</h3>
+                            <div class="parameters-grid">
+                                <div class="parameter">
+                                    <h4><code>gain_weight</code> (float, default: 1.0)</h4>
+                                    <p>Multiplier for rewards when the agent gains boost. Higher values make boost collection more important.</p>
+                                </div>
+                                
+                                <div class="parameter">
+                                    <h4><code>lose_weight</code> (float, default: 1.0)</h4>
+                                    <p>Multiplier for penalties when the agent loses boost. Higher values discourage boost usage.</p>
+                                </div>
+                                
+                                <div class="parameter">
+                                    <h4><code>activation_fn</code> (callable, default: √(0.01x))</h4>
+                                    <p>Function applied to boost values before calculating rewards. The default square root function makes low boost more valuable.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="training-section">
+                        <h2>Implementation</h2>
+                        
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-filename">boost_change_reward.py</span>
+                                <button class="copy-button" title="Copy to clipboard">
+                                    <i class="far fa-copy"></i>
+                                </button>
+                            </div>
+                            <pre><code class="language-python">import math
+from typing import List, Dict, Any, Callable
+
+from rlgym.api import RewardFunction, AgentID, StateType, RewardType
+from rlgym.rocket_league.api import GameState
+
+
+class BoostChangeReward(RewardFunction[AgentID, GameState, float]):
+    def __init__(self, gain_weight: float = 1.0, lose_weight=1.0,
+                 activation_fn: Callable[[float], float] = lambda x: math.sqrt(0.01 * x)):
+        """
+        Reward function that rewards agents for increasing their boost and penalizes them for decreasing it.
+
+        :param gain_weight: Weight to apply to the reward when the agent gains boost
+        :param lose_weight: Weight to apply to the reward when the agent loses boost
+        :param activation_fn: Activation function to apply to the boost value before calculating the reward. Default is
+                              the square root function so that increasing boost is more important when boost is low.
+        """
+        self.gain_weight = gain_weight
+        self.lose_weight = lose_weight
+        self.activation_fn = activation_fn
+
+        self.prev_values = None
+
+    def reset(self, agents: List[AgentID], initial_state: StateType, shared_info: Dict[str, Any]) -> None:
+        self.prev_values = {
+            agent: self.activation_fn(initial_state.cars[agent].boost_amount)
+            for agent in agents
+        }
+
+    def get_rewards(self, agents: List[AgentID], state: StateType, is_terminated: Dict[AgentID, bool],
+                    is_truncated: Dict[AgentID, bool], shared_info: Dict[str, Any]) -> Dict[AgentID, RewardType]:
+        rewards = {}
+        for agent in agents:
+            current_value = self.activation_fn(state.cars[agent].boost_amount)
+            delta = current_value - self.prev_values[agent]
+            if delta > 0:
+                rewards[agent] = delta * self.gain_weight
+            elif delta < 0:
+                rewards[agent] = delta * self.lose_weight
+            else:
+                rewards[agent] = 0
+            self.prev_values[agent] = current_value
+
+        return rewards</code></pre>
+                        </div>
+                        
+                        <div class="training-description">
+                            <h3>How the Reward System Works</h3>
+                            <p>The <code>BoostChangeReward</code> function implements a sophisticated reward system that evaluates boost management. Here's a detailed breakdown of its operation:</p>
+                            
+                            <h4>1. Initialization</h4>
+                            <p>When the reward function is created, it sets up:</p>
+                            <ul>
+                                <li>Weights for boost gain and loss</li>
+                                <li>An activation function (defaults to square root)</li>
+                                <li>Initial state tracking for each agent</li>
+                            </ul>
+                            
+                            <h4>2. Reward Calculation</h4>
+                            <p>Each frame, the system:</p>
+                            <ol>
+                                <li>Gets the current boost level for each agent</li>
+                                <li>Applies the activation function to the boost value</li>
+                                <li>Calculates the change from the previous frame</li>
+                                <li>Applies the appropriate weight based on whether boost was gained or lost</li>
+                                <li>Updates the stored boost value for the next frame</li>
+                            </ol>
+                            
+                            <h4>3. Activation Function</h4>
+                            <p>The default activation function (<code>√(0.01x)</code>) makes boost more valuable at lower levels, encouraging agents to:</p>
+                            <ul>
+                                <li>Prioritize collecting boost when nearly empty</li>
+                                <li>Be more conservative with boost when supplies are low</li>
+                                <li>Value small boost pads more when they're most needed</li>
+                            </ul>
+                            
+                            <h3>Training Benefits</h3>
+                            <p>This reward function promotes several key behaviors in trained agents:</p>
+                            <ul>
+                                <li><strong>Efficient Pathing</strong>: Agents learn optimal boost collection routes</li>
+                                <li>Strategic Boost Usage: Agents conserve boost for critical moments</li>
+                                <li>Map Awareness: Agents develop knowledge of boost pad locations</li>
+                                <li>Resource Management: Agents balance boost usage with other objectives</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="training-section">
+                        <h2>Usage Examples</h2>
+                        
+                        <h3>Basic Usage</h3>
+                        <p>Here's how to use the <code>BoostChangeReward</code> in your RLGym environment:</p>
+                        
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-filename">example_usage.py</span>
+                                <button class="copy-button" title="Copy to clipboard">
+                                    <i class="far fa-copy"></i>
+                                </button>
+                            </div>
+                            <pre><code class="language-python">from rlgym.api import make
+from boost_change_reward import BoostChangeReward
+
+# Create environment with default parameters
+env = make(
+    reward_fn=BoostChangeReward(
+        gain_weight=1.0,
+        lose_weight=1.0
+    )
+)
+
+# Reset the environment
+obs = env.reset()
+
+# Training loop
+done = False
+while not done:
+    # Get actions from your agent
+    actions = agent.act(obs)
+    
+    # Step the environment
+    next_obs, rewards, done, info = env.step(actions)
+    
+    # Update agent
+    agent.learn(obs, actions, rewards, next_obs, done)
+    
+    obs = next_obs</code></pre>
+                        </div>
+                        
+                        <h3>Advanced Configuration</h3>
+                        <p>For more control over the reward function, you can customize the activation function and weights:</p>
+                        
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-filename">advanced_config.py</span>
+                                <button class="copy-button" title="Copy to clipboard">
+                                    <i class="far fa-copy"></i>
+                                </button>
+                            </div>
+                            <pre><code class="language-python">import math
+from rlgym.api import make
+from boost_change_reward import BoostChangeReward
+
+def custom_activation(x: float) -> float:
+    """Custom activation function that emphasizes low boost levels"""
+    return math.pow(x, 0.25)  # More aggressive than square root
+
+# Create environment with custom parameters
+env = make(
+    reward_fn=BoostChangeReward(
+        gain_weight=1.5,      # More reward for collecting boost
+        lose_weight=0.8,      # Less penalty for using boost
+        activation_fn=custom_activation
+    )
+)</code></pre>
+                        </div>
+                        
+                        <h3>Combining with Other Rewards</h3>
+                        <p>For best results, combine <code>BoostChangeReward</code> with other reward functions using <code>CombinedReward</code>:</p>
+                        
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-filename">combined_rewards.py</span>
+                                <button class="copy-button" title="Copy to clipboard">
+                                    <i class="far fa-copy"></i>
+                                </button>
+                            </div>
+                            <pre><code class="language-python">from rlgym.api import make
+from rlgym.utils.reward_functions import CombinedReward
+from rlgym_tools.extra_rewards import EventReward
+from boost_change_reward import BoostChangeReward
+
+def get_reward():
+    return CombinedReward(
+        (BoostChangeReward(gain_weight=1.0, lose_weight=0.5), 0.5),  # 50% weight to boost management
+        (EventReward(goal=10, concede=-10), 0.3),                   # 30% weight to scoring
+        (EventReward(save=2, shot=1, demo=1), 0.2)                  # 20% weight to other events
+    )
+
+# Create environment with combined rewards
+env = make(reward_fn=get_reward())</code></pre>
+                        </div>
+                    </div>
+                    
+                    <div class="training-section">
+                        <h2>Best Practices</h2>
+                        
+                        <h3>Parameter Tuning</h3>
+                        <p>When using <code>BoostChangeReward</code>, consider these guidelines for parameter tuning:</p>
+                        
+                        <h4>Gain vs. Loss Weights</h4>
+                        <ul>
+                            <li><strong>Aggressive Play</strong>: Higher <code>gain_weight</code> (1.5-2.0) with moderate <code>lose_weight</code> (0.5-1.0)</li>
+                            <li><strong>Defensive Play</strong>: Balanced weights (1.0/1.0) for even boost management</li>
+                            <li><strong>Boost Conservation</strong>: Lower <code>lose_weight</code> (0.1-0.5) to reduce penalty for using boost</li>
+                        </ul>
+                        
+                        <h4>Activation Functions</h4>
+                        <p>Different activation functions can lead to different behaviors:</p>
+                        
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-filename">activation_functions.py</span>
+                                <button class="copy-button" title="Copy to clipboard">
+                                    <i class="far fa-copy"></i>
+                                </button>
+                            </div>
+                            <pre><code class="language-python">import math
+
+def linear_activation(x):
+    """Linear scaling - all boost levels are equally valuable"""
+    return x
+
+def sqrt_activation(x):
+    """Square root - emphasizes low boost levels (default)"""
+    return math.sqrt(0.01 * x)
+
+def cubic_activation(x):
+    """Cubic root - even stronger emphasis on low boost"""
+    return math.pow(0.01 * x, 1/3)
+
+def threshold_activation(x, threshold=0.2):
+    """Threshold-based - only rewards collecting boost below threshold"""
+    return 1.0 if x < threshold else 0.0</code></pre>
+                        </div>
+                        
+                        <h3>Training Tips</h3>
+                        <ul>
+                            <li>Start with conservative weights and gradually increase them as training progresses</li>
+                            <li>Monitor boost collection efficiency during training</li>
+                            <li>Combine with other reward functions for balanced behavior</li>
+                            <li>Consider using curriculum learning to gradually introduce boost management</li>
+                        </ul>
+                        
+                        <h3>Common Pitfalls</h3>
+                        <ul>
+                            <li><strong>Over-prioritizing boost</strong>: If <code>gain_weight</code> is too high, agents may ignore objectives to collect boost</li>
+                            <li><strong>Boost hoarding</strong>: If <code>lose_weight</code> is too high, agents may become too conservative with boost usage</li>
+                            <li><strong>Oscillating behavior</strong>: Drastic weight changes can cause unstable training</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="training-section">
+                        <h2>Advanced Topics</h2>
+                        
+                        <h3>Custom Activation Functions</h3>
+                        <p>For specialized behavior, you can create custom activation functions:</p>
+                        
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-filename">custom_activation.py</span>
+                                <button class="copy-button" title="Copy to clipboard">
+                                    <i class="far fa-copy"></i>
+                                </button>
+                            </div>
+                            <pre><code class="language-python">def piecewise_activation(x):
+    """
+    Custom activation with different slopes for different boost ranges
+    - High reward for 0-20% boost (critical)
+    - Medium reward for 20-80% boost (useful)
+    - Low reward for 80-100% boost (less important)
+    """
+    if x < 0.2:  # 0-20% boost
+        return x * 2.0
+    elif x < 0.8:  # 20-80% boost
+        return 0.4 + (x - 0.2) * 0.5
+    else:  # 80-100% boost
+        return 0.7 + (x - 0.8) * 0.15</code></pre>
+                        </div>
+                        
+                        <h3>Team-Based Boost Management</h3>
+                        <p>For team play, you can modify the reward function to consider team boost levels:</p>
+                        
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-filename">team_boost_reward.py</span>
+                                <button class="copy-button" title="Copy to clipboard">
+                                    <i class="far fa-copy"></i>
+                                </button>
+                            </div>
+                            <pre><code class="language-python">class TeamBoostReward(RewardFunction[AgentID, GameState, float]):
+    def __init__(self, team_weight=0.5, personal_weight=0.5):
+        self.team_weight = team_weight
+        self.personal_weight = personal_weight
+        self.prev_team_boost = None
+        self.prev_personal_boost = None
+        
+    def reset(self, agents: List[AgentID], initial_state: StateType, shared_info: Dict[str, Any]) -> None:
+        self.prev_team_boost = self._get_team_boost(initial_state, 0)  # Assuming team 0
+        self.prev_personal_boost = {
+            agent: initial_state.cars[agent].boost_amount
+            for agent in agents
+        }
+        
+    def _get_team_boost(self, state: GameState, team: int) -> float:
+        """Calculate average boost for a team"""
+        team_boost = [state.cars[agent].boost_amount 
+                     for agent in state.cars 
+                     if state.cars[agent].team_num == team]
+        return sum(team_boost) / len(team_boost) if team_boost else 0.0
+        
+    def get_rewards(self, agents: List[AgentID], state: GameState, 
+                   is_terminated: Dict[AgentID, bool],
+                   is_truncated: Dict[AgentID, bool], 
+                   shared_info: Dict[str, Any]) -> Dict[AgentID, float]:
+        
+        current_team_boost = self._get_team_boost(state, 0)
+        team_boost_delta = current_team_boost - self.prev_team_boost
+        
+        rewards = {}
+        for agent in agents:
+            current_personal = state.cars[agent].boost_amount
+            personal_delta = current_personal - self.prev_personal_boost[agent]
+            
+            # Combine team and personal boost changes
+            reward = (self.team_weight * team_boost_delta +
+                     self.personal_weight * personal_delta)
+            
+            rewards[agent] = reward
+            self.prev_personal_boost[agent] = current_personal
+        
+        self.prev_team_boost = current_team_boost
+        return rewards</code></pre>
+                        </div>
+                    </div>
+                    
+                    <div class="training-section">
+                        <h2>Conclusion</h2>
+                        <p>The <code>BoostChangeReward</code> function is a powerful tool for teaching RL agents effective boost management in Rocket League. By carefully tuning the parameters and combining it with other reward functions, you can create agents that make intelligent decisions about when to collect and use boost.</p>
+                        
+                        <h3>Key Takeaways</h3>
+                        <ul>
+                            <li>Use <code>gain_weight</code> and <code>lose_weight</code> to balance boost collection and usage</li>
+                            <li>Customize the activation function to emphasize different boost levels</li>
+                            <li>Combine with other rewards for balanced behavior</li>
+                            <li>Monitor training to ensure the agent is learning the desired behavior</li>
+                        </ul>
+                        
+                        <p>With proper implementation and tuning, <code>BoostChangeReward</code> can significantly improve your agent's performance by teaching it the importance of boost management in Rocket League.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // Mobile menu toggle
+        const hamburger = document.querySelector('.hamburger');
+        const navLinks = document.querySelector('.nav-links');
+        
+        if (hamburger && navLinks) {
+            hamburger.addEventListener('click', () => {
+                navLinks.classList.toggle('active');
+                hamburger.setAttribute('aria-expanded', 
+                    hamburger.getAttribute('aria-expanded') === 'true' ? 'false' : 'true'
+                );
+            });
+        }
+    </script>
+</body>
+</html>

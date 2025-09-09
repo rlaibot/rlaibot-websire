@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Stack Reward - A utility reward function for RLGym that combines multiple rewards into a single vector">
+    <title>Rocket League Bot Training | Stack Reward</title>
+    <link rel="icon" type="image/png" href="https://www.freepnglogos.com/uploads/rocket-league-logo-png/rocket-league-logo-png-1.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <style>
+        .training-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: rgba(26, 32, 44, 0.9);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            color: #ffffff;
+            line-height: 1.6;
+        }
+        
+        .training-background {
+            background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.8)), 
+                        url('https://images.unsplash.com/photo-1569505840673-3f5b24b6c1d9?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80');
+            background-size: cover;
+            background-position: center;
+            padding: 4rem 2rem;
+        }
+        
+        .training-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 2rem;
+            background: rgba(26, 32, 44, 0.8);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .training-header h1 {
+            color: #ffffff;
+            margin-bottom: 0.5rem;
+            font-size: 2.5rem;
+        }
+        
+        .training-header p {
+            color: #a0aec0;
+            font-size: 1.1rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .training-section {
+            margin-bottom: 3rem;
+            background: rgba(26, 32, 44, 0.6);
+            padding: 1.5rem;
+            border-radius: 8px;
+            border-left: 4px solid #4299e1;
+        }
+        
+        .training-section h2 {
+            color: #63b3ed;
+            margin-top: 0;
+            margin-bottom: 1.5rem;
+            font-size: 1.75rem;
+            border-bottom: 1px solid #2d3748;
+            padding-bottom: 0.5rem;
+        }
+        
+        .training-section h3 {
+            color: #90cdf4;
+            margin-top: 1.5rem;
+            margin-bottom: 1rem;
+            font-size: 1.4rem;
+        }
+        
+        .training-section h4 {
+            color: #a0aec0;
+            margin-top: 1.25rem;
+            margin-bottom: 0.75rem;
+            font-size: 1.1rem;
+        }
+        
+        .training-section p, .training-section li {
+            color: #e2e8f0;
+            font-size: 1rem;
+            line-height: 1.7;
+        }
+        
+        .training-section ul, .training-section ol {
+            padding-left: 1.5rem;
+            margin: 1rem 0;
+        }
+        
+        .training-section li {
+            margin-bottom: 0.5rem;
+        }
+        
+        code, pre {
+            font-family: 'Fira Code', monospace;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 4px;
+            padding: 0.2rem 0.4rem;
+            font-size: 0.9em;
+        }
+        
+        pre {
+            padding: 1rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+            border-radius: 6px;
+            position: relative;
+            background: #1e1e1e;
+            border: 1px solid #2d3748;
+        }
+        
+        pre code {
+            background: transparent;
+            padding: 0;
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+        
+        .code-block {
+            position: relative;
+            margin: 1.5rem 0;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .code-header {
+            display: flex;
+            justify-content: flex-end;
+            background: #2d3748;
+            padding: 0.5rem 1rem;
+            border-bottom: 1px solid #1a202c;
+        }
+        
+        .copy-btn {
+            background: #2d3748;
+            color: #a0aec0;
+            border: 1px solid #4a5568;
+            border-radius: 4px;
+            padding: 0.25rem 0.75rem;
+            cursor: pointer;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s ease;
+        }
+        
+        .copy-btn:hover {
+            background: #4a5568;
+            color: #ffffff;
+        }
+        
+        .copy-btn.copied {
+            background: #48bb78;
+            color: white;
+            border-color: #2f855a;
+        }
+        
+        .reward-documentation {
+            background: rgba(26, 32, 44, 0.5);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 1.5rem 0;
+            border-left: 4px solid #4299e1;
+        }
+        
+        .reward-component {
+            margin: 2rem 0;
+            padding: 1.5rem;
+            background: rgba(26, 32, 44, 0.5);
+            border-radius: 8px;
+            border-left: 4px solid #4299e1;
+        }
+        
+        .reward-component h4 {
+            color: #63b3ed;
+            margin-top: 0;
+            font-size: 1.2rem;
+        }
+        
+        .parameters-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            background: rgba(26, 32, 44, 0.7);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .parameters-table th, 
+        .parameters-table td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid #2d3748;
+        }
+        
+        .parameters-table th {
+            background: rgba(26, 32, 44, 0.9);
+            color: #63b3ed;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+        }
+        
+        .parameters-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .parameters-table code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9em;
+            color: #f6ad55;
+        }
+        
+        .tag {
+            display: inline-block;
+            background: rgba(66, 153, 225, 0.2);
+            color: #63b3ed;
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin: 0.2rem;
+            white-space: nowrap;
+        }
+        
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            color: #90cdf4;
+            text-decoration: none;
+            margin-bottom: 1.5rem;
+            transition: color 0.2s ease;
+        }
+        
+        .back-button:hover {
+            color: #63b3ed;
+            text-decoration: underline;
+        }
+        
+        .back-button i {
+            margin-right: 0.5rem;
+        }
+        
+        .component-method {
+            background: rgba(45, 55, 72, 0.5);
+            border-radius: 6px;
+            padding: 1.25rem;
+            margin: 1.25rem 0;
+            border-left: 3px solid #63b3ed;
+        }
+        
+        .component-method h5 {
+            color: #90cdf4;
+            margin-top: 0;
+            margin-bottom: 0.75rem;
+            font-size: 1.05rem;
+            display: flex;
+            align-items: center;
+        }
+        
+        .component-method h5::before {
+            content: '»';
+            color: #63b3ed;
+            margin-right: 0.5rem;
+            font-size: 1.2em;
+        }
+        
+        .component-method ul, .component-method ol {
+            margin: 0.75rem 0 0.5rem 1.5rem;
+            padding-left: 0.5rem;
+        }
+        
+        .component-method li {
+            margin-bottom: 0.4rem;
+            color: #e2e8f0;
+        }
+        
+        .component-method code {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9em;
+            color: #f6ad55;
+        }
+        
+        .math-equation {
+            background: rgba(45, 55, 72, 0.7);
+            padding: 1rem;
+            border-radius: 6px;
+            margin: 1rem 0;
+            font-family: 'Fira Code', monospace;
+            overflow-x: auto;
+        }
+        
+        @media (max-width: 768px) {
+            .training-content {
+                padding: 1.5rem;
+            }
+            
+            .training-header h1 {
+                font-size: 2rem;
+            }
+            
+            .training-header p {
+                font-size: 1rem;
+            }
+            
+            .training-section {
+                padding: 1.25rem;
+            }
+            
+            pre {
+                padding: 0.75rem;
+                font-size: 0.85em;
+            }
+        }
+    </style>
+    <script>
+        // Add copy button to all code blocks
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add copy button to each code block
+            document.querySelectorAll('pre').forEach((codeBlock, index) => {
+                // Create copy button
+                const button = document.createElement('button');
+                button.className = 'copy-btn';
+                button.innerHTML = '<i class="far fa-copy"></i>';
+                button.setAttribute('aria-label', 'Copy code');
+                
+                // Create container for the button
+                const container = document.createElement('div');
+                container.className = 'code-header';
+                container.style.display = 'flex';
+                container.style.justifyContent = 'flex-end';
+                
+                // Insert the button before the pre element
+                const pre = codeBlock.parentNode;
+                if (pre.parentNode) {
+                    pre.parentNode.insertBefore(container, pre);
+                    container.appendChild(button);
+                }
+
+                button.addEventListener('click', function() {
+                    // Create a temporary textarea to copy from
+                    const textarea = document.createElement('textarea');
+                    textarea.value = codeBlock.textContent;
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    
+                    try {
+                        // Copy the text
+                        document.execCommand('copy');
+                        button.innerHTML = '<i class="fas fa-check"></i>';
+                        button.classList.add('copied');
+                        
+                        // Reset button after 2 seconds
+                        setTimeout(function() {
+                            button.innerHTML = '<i class="far fa-copy"></i>';
+                            button.classList.remove('copied');
+                        }, 2000);
+                    } catch (err) {
+                        console.error('Failed to copy text: ', err);
+                    }
+                    
+                    // Clean up
+                    document.body.removeChild(textarea);
+                });
+            });
+        });
+    </script>
+</head>
+<body>
+    <header class="main-header">
+        <div class="container">
+            <nav class="navbar">
+                <a href="../index.html" class="logo">
+                    <img src="https://www.freepnglogos.com/uploads/rocket-league-logo-png/rocket-league-logo-png-1.png" alt="Rocket League Logo" class="rl-logo">
+                    <span>RL Bot Training</span>
+                </a>
+                <button class="hamburger" aria-label="Toggle navigation menu" aria-expanded="false">
+                    <span class="hamburger-box">
+                        <span class="hamburger-inner"></span>
+                    </span>
+                </button>
+                <ul class="nav-links">
+                    <li><a href="../index.html">Home</a></li>
+                    <li><a href="../training-packs.html" class="active">Training Packs</a></li>
+                    <li><a href="../bot-tools.html">Bot Tools</a></li>
+                    <li><a href="../tutorials.html">Tutorials</a></li>
+                    <li><a href="../community.html">Community</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <div class="training-background">
+        <section class="section">
+            <div class="container">
+                <a href="../training-packs.html" class="back-button">
+                    <i class="fas fa-arrow-left"></i> Back to Training Packs
+                </a>
+                
+                <div class="training-content">
+                    <div class="training-header">
+                        <h1>Stack Reward</h1>
+                        <p>A utility reward function that combines multiple rewards into a single vector, enabling custom post-processing and analysis.</p>
+                        
+                        <div class="training-tags">
+                            <span class="tag"><i class="fas fa-robot"></i> RLGym</span>
+                            <span class="tag"><i class="fas fa-layer-group"></i> Utility</span>
+                            <span class="tag"><i class="fas fa-code"></i> Python</span>
+                        </div>
+                    </div>
+                    
+                    <div class="training-section">
+                        <h2>Overview</h2>
+                        <p>The <code>StackReward</code> class is a utility that combines multiple reward functions into a single vector output. This is particularly useful for scenarios where you want to maintain individual reward components for analysis, logging, or custom post-processing.</p>
+                        
+                        <div class="reward-documentation">
+                            <h3>How It Works</h3>
+                            <p>The <code>StackReward</code> class is designed to combine the output of several different reward functions into a single, unified reward signal. Instead of returning a single number, it produces a NumPy vector where each element represents the reward from one of the individual functions. This is particularly useful for advanced machine learning setups where you might want to analyze, normalize, or apply different weightings to various reward components, rather than just getting a single summed value.</p>
+                            
+                            <h4>Key Components</h4>
+                            <p>The <code>StackReward</code> class consists of three main components that work together:</p>
+                            
+                            <ul>
+                                <li>Apply custom weighting to different reward components</li>
+                                <li>Log and analyze individual reward components separately</li>
+                                <li>Implement adaptive reward scaling or normalization</li>
+                                <li>Easily visualize the contribution of each reward component</li>
+                            </ul>
+                            
+                            <div class="component-method">
+                                <h5>1. __init__ Method</h5>
+                                <p>The constructor initializes the <code>StackReward</code> with a list of <code>RewardFunction</code> objects. These are the individual reward functions that will be combined into a single output vector.</p>
+                                <ul>
+                                    <li>Stores the list of reward functions for later use</li>
+                                    <li>Ensures all provided functions are compatible with RLGym's reward function interface</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="component-method">
+                                <h5>2. reset Method</h5>
+                                <p>This method ensures proper initialization of all contained reward functions at the start of each episode.</p>
+                                <ul>
+                                    <li>Calls <code>reset</code> on each reward function in the stack</li>
+                                    <li>Passes through the initial state and shared info to each function</li>
+                                    <li>Maintains the standard RLGym reset pattern for compatibility</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="component-method">
+                                <h5>3. get_rewards Method</h5>
+                                <p>The core functionality that combines multiple rewards into a single vector output.</p>
+                                <ul>
+                                    <li>Iterates through each reward function in the stack</li>
+                                    <li>Collects individual rewards for each agent into a list</li>
+                                    <li>Uses <code>np.stack</code> to combine rewards into a NumPy array</li>
+                                    <li>Returns a dictionary mapping agent IDs to their respective reward vectors</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="component-method">
+                                <h5>Key Benefits</h5>
+                                <ul>
+                                    <li><strong>Component Analysis</strong>: Track how each reward component contributes to learning</li>
+                                    <li><strong>Flexible Weighting</strong>: Apply custom weights to different reward components</li>
+                                    <li><strong>Debugging</strong>: Isolate and analyze individual reward signals</li>
+                                    <li><strong>Adaptive Rewards</strong>: Modify reward components dynamically during training</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="component-method">
+                                <h5>When to Use</h5>
+                                <p>Consider using <code>StackReward</code> when you need to:</p>
+                                <ul>
+                                    <li>Debug or analyze the contribution of individual reward components</li>
+                                    <li>Implement custom reward scaling or normalization</li>
+                                    <li>Dynamically adjust reward weights during training</li>
+                                    <li>Visualize how different reward components evolve over time</li>
+                                    <li>Create complex reward functions with many components</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="training-section">
+                        <h2>Implementation</h2>
+                        <p>Here's the complete implementation of the Stack Reward function:</p>
+                        
+                        <div class="code-block">
+                            <pre><code class="language-python">from typing import List, Dict, Any
+
+import numpy as np
+from rlgym.api import RewardFunction, AgentID, StateType
+from rlgym.rocket_league.api import GameState
+
+
+class StackReward(RewardFunction[AgentID, GameState, np.ndarray]):
+    """
+    Turns the results from several reward functions into a single vector with each reward.
+    Useful for custom post-processing like adaptive weighting, normalization, or logging.
+    
+    Args:
+        reward_functions: List of reward functions to combine
+    """
+    def __init__(self, reward_functions: List[RewardFunction[AgentID, GameState, float]]):
+        self.reward_functions = reward_functions
+
+    def reset(self, agents: List[AgentID], initial_state: StateType, 
+              shared_info: Dict[str, Any]) -> None:
+        """Reset all reward functions with initial state."""
+        for reward_function in self.reward_functions:
+            reward_function.reset(agents, initial_state, shared_info)
+
+    def get_rewards(
+        self, 
+        agents: List[AgentID], 
+        state: StateType, 
+        is_terminated: Dict[AgentID, bool],
+        is_truncated: Dict[AgentID, bool], 
+        shared_info: Dict[str, Any]
+    ) -> Dict[AgentID, np.ndarray]:
+        """
+        Get stacked rewards for all agents.
+        
+        Returns:
+            Dictionary mapping agent IDs to stacked reward arrays
+        """
+        # Initialize dictionary to hold lists of rewards for each agent
+        rewards = {agent: [] for agent in agents}
+        
+        # Collect rewards from each reward function
+        for reward_function in self.reward_functions:
+            for agent, reward in reward_function.get_rewards(
+                agents, state, is_terminated, is_truncated, shared_info
+            ).items():
+                rewards[agent].append(reward)
+                
+        # Stack rewards into a single array per agent
+        return {agent: np.stack(rewards[agent]) for agent in agents}</code></pre>
+                        </div>
+                    </div>
+                    
+                    <div class="training-section">
+                        <h2>Usage Examples</h2>
+                        
+                        <div class="reward-component">
+                            <h4>Basic Usage</h4>
+                            <p>Combine multiple reward functions into a single vector:</p>
+                            <div class="code-block">
+                                <pre><code class="language-python">from rlgym.envs import make
+from stack_reward import StackReward
+from some_rewards import VelocityReward, TouchBallReward, BoostReward
+
+# Create individual reward functions
+velocity_reward = VelocityReward()
+touch_reward = TouchBallReward()
+boost_reward = BoostReward()
+
+# Combine them using StackReward
+stacked_reward = StackReward([
+    velocity_reward,
+    touch_reward,
+    boost_reward
+])
+
+# Create environment with stacked rewards
+env = make(
+    reward_fn=stacked_reward,
+    # ... other environment parameters
+)
+
+# The reward will be a NumPy array with shape (3,)
+# where each element corresponds to one of the input rewards</code></pre>
+                            </div>
+                        </div>
+                        
+                        <div class="reward-component">
+                            <h4>Custom Post-Processing</h4>
+                            <p>Apply custom weighting to the stacked rewards:</p>
+                            <div class="code-block">
+                                <pre><code class="language-python">from rlgym.api import RewardFunction
+import numpy as np
+
+class WeightedReward(RewardFunction):
+    def __init__(self, stacked_reward, weights):
+        self.stacked_reward = stacked_reward
+        self.weights = np.array(weights)
+        
+    def reset(self, agents, initial_state, shared_info):
+        self.stacked_reward.reset(agents, initial_state, shared_info)
+        
+    def get_rewards(self, agents, state, is_terminated, is_truncated, shared_info):
+        # Get stacked rewards
+        stacked = self.stacked_reward.get_rewards(agents, state, is_terminated, 
+                                                 is_truncated, shared_info)
+        
+        # Apply weights and sum
+        return {agent: np.dot(rewards, self.weights) 
+                for agent, rewards in stacked.items()}
+
+# Usage
+weighted_reward = WeightedReward(
+    stacked_reward=stacked_reward,
+    weights=[0.5, 0.3, 0.2]  # Custom weights for each reward component
+)</code></pre>
+                            </div>
+                        </div>
+                        
+                        <div class="reward-component">
+                            <h4>Logging and Analysis</h4>
+                            <p>Log individual reward components for analysis:</p>
+                            <div class="code-block">
+                                <pre><code class="language-python">class RewardLogger(RewardFunction):
+    def __init__(self, stacked_reward, log_interval=100):
+        self.stacked_reward = stacked_reward
+        self.log_interval = log_interval
+        self.step = 0
+        self.reward_sums = None
+        self.episode_count = 0
+        
+    def reset(self, agents, initial_state, shared_info):
+        self.stacked_reward.reset(agents, initial_state, shared_info)
+        if self.reward_sums is None:
+            self.reward_sums = {agent: np.zeros(3) for agent in agents}
+        self.episode_count += 1
+        
+    def get_rewards(self, agents, state, is_terminated, is_truncated, shared_info):
+        # Get stacked rewards
+        stacked = self.stacked_reward.get_rewards(agents, state, is_terminated, 
+                                                 is_truncated, shared_info)
+        
+        # Update running sums
+        for agent, rewards in stacked.items():
+            self.reward_sums[agent] += rewards
+        
+        # Log statistics periodically
+        self.step += 1
+        if self.step % self.log_interval == 0:
+            for agent, sums in self.reward_sums.items():
+                avg_rewards = sums / self.log_interval
+                print(f"Agent {agent} average rewards (last {self.log_interval} steps):")
+                print(f"  Velocity: {avg_rewards[0]:.4f}")
+                print(f"  Touch:    {avg_rewards[1]:.4f}")
+                print(f"  Boost:    {avg_rewards[2]:.4f}")
+            self.reward_sums = {agent: np.zeros(3) for agent in agents}
+        
+        # Return the sum of rewards for the actual environment
+        return {agent: np.sum(rewards) for agent, rewards in stacked.items()}</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="training-section">
+                        <h2>Best Practices</h2>
+                        
+                        <div class="reward-component">
+                            <h4>When to Use StackReward</h4>
+                            <p>Consider using <code>StackReward</code> when you need fine-grained control over how different aspects of the agent's behavior are rewarded. The vector output enables sophisticated reward shaping techniques and detailed performance analysis.</p>
+                            <ul>
+                                <li><strong>Debugging</strong>: Identify which reward components are driving agent behavior</li>
+                                <li><strong>Analysis</strong>: Track how different reward components change during training</li>
+                                <li><strong>Customization</strong>: Implement complex reward shaping with fine-grained control</li>
+                                <li><strong>Experimentation</strong>: Easily try different reward weightings without modifying the environment</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="reward-component">
+                            <h4>Performance Considerations</h4>
+                            <ul>
+                                <li>Stacking rewards adds a small overhead due to array creation</li>
+                                <li>For maximum performance in production, consider using a single combined reward function</li>
+                                <li>Use <code>StackReward</code> during development and analysis, then switch to a custom combined function for final training</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="reward-component">
+                            <h4>Advanced Usage</h4>
+                            <p>For more advanced scenarios, you can extend <code>StackReward</code> to include:</p>
+                            <ul>
+                                <li>Automatic normalization of reward components</li>
+                                <li>Adaptive weighting based on training progress</li>
+                                <li>Visualization of reward component contributions</li>
+                                <li>Conditional application of certain rewards</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <footer class="main-footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Join Our Community</h3>
+                    <p>Connect with other bot developers and share your projects</p>
+                    <div class="social-links">
+                        <a href="https://github.com/RLBot/RLBot" target="_blank" rel="noopener noreferrer" aria-label="GitHub"><i class="fab fa-github"></i> RLBot GitHub</a>
+                        <a href="https://github.com/dxkku" target="_blank" rel="noopener noreferrer" aria-label="GitHub"><i class="fab fa-github"></i> My GitHub</a>
+                        <a href="https://discord.gg/fkG77fPmCd" target="_blank" rel="noopener noreferrer" aria-label="Discord"><i class="fab fa-discord"></i> Discord</a>
+                        <a href="https://www.reddit.com/r/RocketLeagueBots/" target="_blank" rel="noopener noreferrer" aria-label="Reddit"><i class="fab fa-reddit"></i> Reddit</a>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="../index.html">Home</a></li>
+                        <li><a href="../training-packs.html">Training Packs</a></li>
+                        <li><a href="../bot-tools.html">Bot Tools</a></li>
+                        <li><a href="../tutorials.html">Tutorials</a></li>
+                        <li><a href="../community.html">Community</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Rocket League Bot Training. Not affiliated with Psyonix or Epic Games.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../script.js"></script>
+</body>
+</html>

@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Rocket League Bot Development Tools - Essential tools and frameworks for creating Rocket League bots">
+    <title>Rocket League Bot Training | Bot Tools</title>
+    <link rel="icon" type="image/png" href="https://www.freepnglogos.com/uploads/rocket-league-logo-png/rocket-league-logo-png-1.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .tutorial-img {
+            height: 180px;
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+            padding: 3.5rem 1.5rem 1rem; /* Increased top padding to move logos down */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
+        }
+        .tutorial-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            margin: 15px;
+            background: #292D3A;
+            border-radius: 8px;
+            overflow: hidden;
+            color: #ffffff;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .tutorial-content {
+            padding: 20px;
+        }
+        .tutorial-title {
+            color: #ffffff;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        .tutorial-description {
+            color: #000000;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            min-height: 60px;
+        }
+        .tutorial-tags {
+            margin: 20px 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .tutorial-tags .tag {
+            display: inline-block;
+            background: #f0f4f8;
+            color: #2d3748;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            transition: all 0.2s ease;
+        }
+        .tutorial-tags .tag:hover {
+            background: #e2e8f0;
+            transform: translateY(-1px);
+        }
+        
+        .tool-meta {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            font-size: 0.85rem;
+            color: #a0aec0;
+            margin-top: 0.25rem;
+        }
+        
+        .tool-meta .version {
+            background: rgba(99, 179, 237, 0.1);
+            color: #63b3ed;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.8rem;
+        }
+        
+        .tool-meta .release-date {
+            color: #a0aec0;
+            font-size: 0.85rem;
+        }
+        
+        .tool-meta .stars {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        .btn-primary {
+            margin-top: 15px;
+            display: inline-block;
+        }
+        .tutorials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 30px;
+            padding: 20px 0;
+        }
+        .tutorial-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+    <header class="main-header">
+        <div class="container">
+            <nav class="navbar">
+                <a href="index.html" class="logo">
+                    <img src="https://www.freepnglogos.com/uploads/rocket-league-logo-png/rocket-league-logo-png-1.png" alt="Rocket League Logo" class="rl-logo">
+                    <span>RL Bot Training</span>
+                </a>
+                <button class="hamburger" aria-label="Toggle navigation menu" aria-expanded="false">
+                    <span class="hamburger-box">
+                        <span class="hamburger-inner"></span>
+                    </span>
+                </button>
+                <ul class="nav-links">
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="training-packs.html">Training Codes</a></li>
+                    <li><a href="bot-tools.html" class="active">Bot Tools</a></li>
+                    <li><a href="tutorials.html">Tutorials</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero hero-small">
+            <div class="container">
+                <h1>Bot Development Tools</h1>
+                <p class="subtitle">Essential tools and frameworks for creating Rocket League bots</p>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="container">
+                <div class="filters">
+                    <button class="filter-btn active" data-filter="all">All Tools</button>
+                    <button class="filter-btn" data-filter="framework">Frameworks</button>
+                    <button class="filter-btn" data-filter="library">Libraries</button>
+                    <button class="filter-btn" data-filter="utility">Utilities</button>
+                </div>
+
+                <div id="tools-container" class="tutorials-grid">
+                    <!-- Tools will be loaded here by JavaScript -->
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="main-footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <div class="social-links">
+                        <a href="https://github.com/RLBot/RLBot" target="_blank" rel="noopener noreferrer" aria-label="GitHub"><i class="fab fa-github"></i> RLBot GitHub</a>
+                        <a href="https://github.com/dxkku" target="_blank" rel="noopener noreferrer" aria-label="GitHub"><i class="fab fa-github"></i> My GitHub</a>
+                        <a href="https://discord.gg/fkG77fPmCd" target="_blank" rel="noopener noreferrer" aria-label="Discord"><i class="fab fa-discord"></i> Discord</a>
+                        <a href="https://www.reddit.com/r/RocketLeagueBots/" target="_blank" rel="noopener noreferrer" aria-label="Reddit"><i class="fab fa-reddit"></i> Reddit</a>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="training-packs.html">Training Codes</a></li>
+                        <li><a href="bot-tools.html">Bot Tools</a></li>
+                        <li><a href="tutorials.html">Tutorials</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Rocket League Bot Training. Not affiliated with Psyonix or Epic Games.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Bot tools data
+        const botTools = [
+            {
+                title: "RLBot Framework",
+                description: "The official framework for creating Rocket League bots. Includes everything you need to get started with bot development.",
+                image: "logs/rlbot.png",
+                tags: ["Framework", "Python", "C++"],
+                url: "https://github.com/RLBot/RLBot",
+                type: "framework",
+                stars: "4.5k"
+            },
+            {
+                title: "RLGym",
+                description: "A reinforcement learning library for creating and training AI agents to play Rocket League.",
+                image: "logs/rlgym.png",
+                tags: ["Machine Learning", "Python", "RL"],
+                url: "https://github.com/lucas-emery/rocket-league-gym",
+                type: "library",
+                stars: "1.2k"
+            },
+            {
+                title: "BakkesMod",
+                description: "A powerful mod for Rocket League that includes training tools, replay analysis, and bot integration features.",
+                image: "logs/bakkesmod.png",
+                tags: ["Mod", "Training", "Plugins"],
+                url: "https://bakkesmod.com/",
+                type: "utility",
+                stars: "3.8k"
+            },
+            {
+                title: "RLBot Python Starter",
+                description: "A starter pack for creating Rocket League bots using Python with the RLBot framework.",
+                image: "logs/rlbot.png",
+                tags: ["Starter Pack", "Python", "RLBot"],
+                url: "https://github.com/RLBot/RLBotPythonExample",
+                type: "framework",
+                stars: "850"
+            },
+            {
+                title: "RLUtilities",
+                description: "A C++ library with useful utilities for Rocket League bot development, including navigation and ball prediction.",
+                image: "logs/rlbot.png", // Using RLBot logo as placeholder for RLUtilities
+                tags: ["C++", "Library", "Utilities"],
+                url: "https://github.com/samuelpmish/RLUtilities",
+                type: "library",
+                stars: "720"
+            },
+            {
+                title: "RLBot Training App",
+                description: "A desktop application for creating and managing custom training packs for RLBot.",
+                image: "logs/rlbot.png", // Using RLBot logo as placeholder for RLUtilities
+                tags: ["Application", "Training", "GUI"],
+                url: "https://github.com/ZealanL/RocketLeagueTrainer",
+                type: "utility",
+                stars: "450"
+            },
+            {
+                title: "RLGym-v2 to RLBot-v5",
+                description: "A bridge between RLGym-v2 and RLBot-v5, allowing you to train RL agents with RLGym and run them in RLBot.",
+                image: "logs/rlgym.png",
+                tags: ["Machine Learning", "Integration", "Python"],
+                url: "https://github.com/Martico2432/Rlgym-v2-to-rlbot-v5",
+                type: "library",
+                stars: "320"
+            },
+            {
+                title: "RLBot GUI",
+                description: "A graphical user interface for RLBot, making it easier to manage and run bots, view matches, and access tools.",
+                image: "logs/rlbot.png",
+                tags: ["GUI", "Utility", "Management"],
+                url: "https://github.com/RLBot/gui/releases/tag/beta13",
+                type: "utility",
+                stars: "850"
+            },
+            {
+                title: "RLBot Core v0.7.6",
+                description: "Latest stable release of RLBot Core with bug fixes and improvements. Includes reset goals between matches functionality.",
+                image: "logs/rlbot.png",
+                tags: ["Framework", "Update", "Bug Fixes"],
+                url: "https://github.com/RLBot/core/releases/tag/v0.7.6",
+                type: "framework",
+                version: "v0.7.6",
+                releaseDate: "2025-09-09",
+                level: "framework"
+            }
+        ];
+
+        // Function to get difficulty display name
+        function getDifficultyDisplay(level) {
+            const levels = {
+                'beginner': 'Beginner',
+                'intermediate': 'Intermediate',
+                'advanced': 'Advanced',
+                'aerial': 'Aerial',
+                'framework': 'Framework',
+                'utility': 'Utility'
+            };
+            return levels[level] || level;
+        }
+
+        // Function to create tool cards
+        function createToolCard(tool) {
+            const difficulty = tool.level ? tool.level.toLowerCase() : 'utility';
+            const difficultyClass = `difficulty-${difficulty}`;
+            const displayName = getDifficultyDisplay(difficulty);
+            
+            return `
+                <div class="tutorial-card" data-category="${tool.type}">
+                    <div class="tutorial-img" style="background-image: url('${tool.image}');">
+                        <div class="difficulty-badge ${difficultyClass}">
+                            <i class="fas ${getDifficultyIcon(difficulty)}"></i> ${displayName}
+                        </div>
+                    </div>
+                    <div class="tutorial-content">
+                        <div class="tutorial-header">
+                            <h3 class="tutorial-title">${tool.title}</h3>
+                        </div>
+                        <div class="tool-meta">
+                            ${tool.version ? `<span class="version">v${tool.version}</span>` : ''}
+                            ${tool.releaseDate ? `<span class="release-date">${tool.releaseDate}</span>` : ''}
+                            ${tool.stars ? `<span class="stars"><i class="fas fa-star"></i> ${tool.stars}</span>` : ''}
+                        </div>
+                        <p class="tutorial-description">${tool.description}</p>
+                        <div class="tutorial-tags">
+                            ${tool.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+                        </div>
+                        <div class="tool-actions">
+                            <a href="${tool.url}" class="btn btn-primary" target="_blank">
+                                <i class="fab fa-github"></i> View on GitHub
+                            </a>
+                            ${tool.docs ? `
+                                <a href="${tool.docs}" class="btn btn-outline" target="_blank">
+                                    <i class="fas fa-book"></i> Documentation
+                                </a>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Helper function to get appropriate icon for difficulty level
+        function getDifficultyIcon(level) {
+            const icons = {
+                'beginner': 'fa-seedling',
+                'intermediate': 'fa-chart-line',
+                'advanced': 'fa-fire',
+                'aerial': 'fa-rocket',
+                'framework': 'fa-cubes',
+                'utility': 'fa-tools'
+            };
+            return icons[level] || 'fa-star';
+8888        }
+
+        // Filter tools by category or tag
+        function filterTools(filter) {
+            const container = document.getElementById('tools-container');
+            if (!container) return;
+            
+            container.innerHTML = ''; // Clear existing content
+            
+            const filteredTools = filter === 'all' 
+                ? botTools 
+                : botTools.filter(tool => {
+                    // Check if type matches or any tag matches (case-insensitive)
+                    const typeMatch = tool.type && 
+                        tool.type.toLowerCase() === filter.toLowerCase();
+                    const tagMatch = tool.tags.some(tag => 
+                        tag.toLowerCase() === filter.toLowerCase()
+                    );
+                    return typeMatch || tagMatch;
+                });
+            
+            // Sort tools by type and then by title
+            const typeOrder = { 'framework': 0, 'utility': 1, 'training': 2 };
+            filteredTools.sort((a, b) => {
+                if (typeOrder[a.type] !== typeOrder[b.type]) {
+                    return typeOrder[a.type] - typeOrder[b.type];
+                }
+                return a.title.localeCompare(b.title);
+            });
+            
+            // Create and append cards
+            if (filteredTools.length > 0) {
+                filteredTools.forEach(tool => {
+                    container.innerHTML += createToolCard(tool);
+                });
+            } else {
+                container.innerHTML = `
+                    <div class="no-results">
+                        <i class="fas fa-search"></i>
+                        <h3>No tools found</h3>
+                        <p>Try a different filter or category</p>
+                    </div>
+                `;
+            }
+            
+            // Update active filter indicator
+            updateActiveFilterIndicator(filter);
+        }
+
+        // Update active filter indicator
+        function updateActiveFilterIndicator(activeFilter) {
+            const filterButtons = document.querySelectorAll('.filter-btn');
+            filterButtons.forEach(button => {
+                const buttonFilter = button.getAttribute('data-filter');
+                if (buttonFilter === activeFilter) {
+                    button.classList.add('active');
+                } else {
+                    button.classList.remove('active');
+                }
+            });
+            
+            // Update URL hash for deep linking
+            window.location.hash = activeFilter === 'all' ? '' : `#${activeFilter}`;
+        }
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check for hash in URL
+            const initialFilter = window.location.hash ? 
+                window.location.hash.substring(1).toLowerCase() : 'all';
+            
+            // Initial render with filter from URL or default to 'all'
+            filterTools(initialFilter);
+            
+            // Handle filter button clicks using event delegation
+            document.addEventListener('click', (e) => {
+                const button = e.target.closest('.filter-btn');
+                if (!button) return;
+                
+                e.preventDefault();
+                const filter = button.getAttribute('data-filter');
+                filterTools(filter);
+                
+                // Smooth scroll to top when changing filters
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
+            
+            // Handle browser back/forward buttons
+            window.addEventListener('popstate', () => {
+                const filter = window.location.hash ? 
+                    window.location.hash.substring(1).toLowerCase() : 'all';
+                filterTools(filter);
+            });
+            
+            // Add custom styles
+            const style = document.createElement('style');
+            style.textContent = `
+                .difficulty-badge {
+                    position: absolute;
+                    top: 10px;
+                    right: 10px;
+                    padding: 4px 10px;
+                    border-radius: 12px;
+                    font-size: 0.7rem;
+                    font-weight: 600;
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                    color: white;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+                    display: flex;
+                    align-items: center;
+                    gap: 4px;
+                }
+                .difficulty-beginner { background-color: #4CAF50; }
+                .difficulty-intermediate { background-color: #2196F3; }
+                .difficulty-advanced { background-color: #FF9800; }
+                .difficulty-aerial { background-color: #9C27B0; }
+                .difficulty-framework { background-color: #673AB7; }
+                .difficulty-utility { background-color: #607D8B; }
+                
+                .tutorial-img {
+                    position: relative;
+                    background-size: contain;
+                    background-position: center;
+                    background-repeat: no-repeat;
+                    background-color: #1a1d26;
+                    border-radius: 8px 8px 0 0;
+                    transition: transform 0.3s ease;
+                    min-height: 180px;
+                }
+                
+                .tutorial-card:hover .tutorial-img {
+                    transform: scale(1.03);
+                }
+                
+                .tool-actions {
+                    display: flex;
+                    gap: 10px;
+                    margin-top: 15px;
+                }
+                
+                .no-results {
+                    grid-column: 1 / -1;
+                    text-align: center;
+                    padding: 3rem 1rem;
+                    color: #a0aec0;
+                }
+                
+                .no-results i {
+                    font-size: 2.5rem;
+                    margin-bottom: 1rem;
+                    color: #4a5568;
+                }
+                
+                .no-results h3 {
+                    color: #e2e8f0;
+                    margin-bottom: 0.5rem;
+                }
+                
+                .filter-btn.active {
+                    background-color: #4a5568;
+                    color: white;
+                    border-color: #4a5568;
+                }
+            `;
+            document.head.appendChild(style);
+        });
+    </script>
+    <script src="script.js"></script>
+</body>
+</html>

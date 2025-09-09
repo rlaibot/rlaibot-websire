@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Ball Travel Reward - Reward function for ball movement and passing in RLGym">
+    <title>Rocket League Bot Training | Ball Travel Reward</title>
+    <link rel="icon" type="image/png" href="https://www.freepnglogos.com/uploads/rocket-league-logo-png/rocket-league-logo-png-1.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('pre code').forEach(function(codeBlock) {
+                const button = document.createElement('button');
+                button.className = 'copy-button';
+                button.type = 'button';
+                button.title = 'Copy to clipboard';
+                button.innerHTML = '<i class="far fa-copy"></i>';
+                
+                const container = document.createElement('div');
+                container.className = 'code-header';
+                container.style.display = 'flex';
+                container.style.justifyContent = 'flex-end';
+                
+                const pre = codeBlock.parentNode;
+                if (pre.parentNode) {
+                    pre.parentNode.insertBefore(container, pre);
+                    container.appendChild(button);
+                }
+
+                button.addEventListener('click', function() {
+                    const textarea = document.createElement('textarea');
+                    textarea.value = codeBlock.textContent;
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    
+                    try {
+                        document.execCommand('copy');
+                        button.innerHTML = '<i class="fas fa-check"></i>';
+                        button.classList.add('copied');
+                        
+                        setTimeout(function() {
+                            button.innerHTML = '<i class="far fa-copy"></i>';
+                            button.classList.remove('copied');
+                        }, 2000);
+                    } catch (err) {
+                        console.error('Failed to copy text: ', err);
+                    }
+                    
+                    document.body.removeChild(textarea);
+                });
+            });
+        });
+    </script>
+    <style>
+        /* Existing styles from demo-reward.html */
+        pre {
+            margin: 0;
+            padding: 0;
+            background: none;
+            font-family: 'Fira Code', 'Courier New', monospace;
+            white-space: pre;
+            word-wrap: normal;
+        }
+        
+        code {
+            font-family: 'Fira Code', 'Courier New', monospace;
+            font-size: 0.95rem;
+        }
+        
+        .training-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: rgba(26, 32, 44, 0.9);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .training-background {
+            background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.8)), 
+                        url('https://images.unsplash.com/photo-1569505840673-3f5b24b6c1d9?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80');
+            background-size: cover;
+            background-position: center;
+            padding: 4rem 0;
+            margin-top: -1rem;
+        }
+        
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #90cdf4;
+            text-decoration: none;
+            margin-bottom: 1.5rem;
+            font-weight: 500;
+            transition: color 0.2s ease;
+        }
+        
+        .back-button:hover {
+            color: #63b3ed;
+        }
+        
+        .reward-documentation {
+            background: rgba(45, 55, 72, 0.5);
+            border-left: 4px solid #3b82f6;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .training-section h2 {
+            color: #63b3ed;
+            margin: 2.5rem 0 1.5rem 0;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #2c5282;
+            font-weight: 600;
+            font-size: 1.75rem;
+        }
+        
+        .code-section {
+            margin: 2.5rem 0;
+            position: relative;
+        }
+        
+        .code-block {
+            position: relative;
+            background: #1a202c;
+            color: #e2e8f0;
+            padding: 1.5rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+            font-family: 'Fira Code', 'Courier New', monospace;
+            border: 1px solid #2d3748;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .parameters-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            background: rgba(45, 55, 72, 0.5);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .parameters-table th, 
+        .parameters-table td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid #2d3748;
+        }
+        
+        .parameters-table th {
+            background: #2d3748;
+            color: #63b3ed;
+            font-weight: 500;
+        }
+        
+        .training-section p, .training-section li {
+            color: #e2e8f0;
+            line-height: 1.8;
+            margin-bottom: 1.2rem;
+            font-size: 1.05rem;
+        }
+        
+        .training-section h3 {
+            color: #90cdf4;
+            margin: 2rem 0 1rem 0;
+            font-weight: 500;
+            font-size: 1.4rem;
+            position: relative;
+            padding-left: 1rem;
+            border-left: 3px solid #3b82f6;
+        }
+        
+        .training-section ul, .training-section ol {
+            margin: 1.2rem 0;
+            padding-left: 1.5rem;
+        }
+        
+        .training-section li {
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <header class="main-header">
+        <div class="container">
+            <nav class="navbar">
+                <a href="../index.html" class="logo">
+                    <img src="../images/logo.png" alt="LarryBot Logo" class="logo-img">
+                    <span class="logo-text">LarryBot</span>
+                </a>
+                <ul class="nav-links">
+                    <li><a href="../index.html">Home</a></li>
+                    <li><a href="../bot-tools.html">Bot Tools</a></li>
+                    <li><a href="../training-packs.html" class="active">Training Packs</a></li>
+                    <li><a href="../tutorials.html">Tutorials</a></li>
+                    <li><a href="../community.html">Community</a></li>
+                </ul>
+                <div class="hamburger">
+                    <div class="line"></div>
+                    <div class="line"></div>
+                    <div class="line"></div>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <div class="training-background">
+        <section class="section">
+            <div class="container">
+                <a href="../training-packs.html" class="back-button">
+                    <i class="fas fa-arrow-left"></i> Back to Training Packs
+                </a>
+                
+                <div class="training-content">
+                    <div class="training-header">
+                        <h1>Ball Travel Reward</h1>
+                        <p>A sophisticated reward function that rewards agents based on the distance the ball travels between touches, with configurable weights for different types of ball movements.</p>
+                        
+                        <div class="training-tags">
+                            <span class="tag"><i class="fas fa-tag"></i> RLGym</span>
+                            <span class="fas fa-futbol"> Ball Control</span>
+                            <span class="fas fa-robot"> AI Training</span>
+                            <span class="fas fa-code"> Python</span>
+                        </div>
+                    </div>
+                    
+                    <div class="training-section">
+                        <h2>Overview</h2>
+                        <p>The <code>BallTravelReward</code> is a sophisticated reward function designed for reinforcement learning in Rocket League. It calculates and distributes rewards to agents based on the distance the ball travels between successive touches, promoting strategic plays like passing, dribbling, and long shots.</p>
+                        
+                        <div class="reward-documentation">
+                            <h3>How It Works</h3>
+                            <p>This reward system tracks the ball's movement and identifies the last player to touch it. The core functionality is divided into two main components:</p>
+                            
+                            <h4>1. Initialization (__init__)</h4>
+                            <p>The function is configured with adjustable weights to tune rewards for different types of plays:</p>
+                            <ul>
+                                <li><strong>Possession & Dribbling</strong>: Rewards for maintaining control of the ball</li>
+                                <li><strong>Passing Plays</strong>: Rewards for successful team coordination</li>
+                                <li><strong>Ball Recovery</strong>: Penalties for losing possession and rewards for regaining it</li>
+                                <li><strong>Scoring</strong>: Rewards for effective offensive plays leading to goals</li>
+                            </ul>
+                            
+                            <h4>2. Reward Calculation (get_rewards)</h4>
+                            <p>During each game step, the system:</p>
+                            <ol>
+                                <li>Tracks the ball's movement since the last touch</li>
+                                <li>Identifies which player touched the ball</li>
+                                <li>Calculates rewards based on the context of the touch</li>
+                                <li>Updates the game state for the next calculation</li>
+                            </ol>
+                            
+                            <h3>Key Features</h3>
+                            <h4>Intelligent Reward Distribution</h4>
+                            <p>Optional integration of ball height in distance calculations to reward aerial plays differently from ground plays.</p>
+                            
+                            <h4>Configurable Normalization</h4>
+                            <p>Automatic distance normalization based on field dimensions, with options for custom scaling.</p>
+                            
+                            <h3>Parameters</h3>
+                            <table class="parameters-table">
+                                <thead>
+                                    <tr>
+                                        <th>Parameter</th>
+                                        <th>Type</th>
+                                        <th>Default</th>
+                                        <th>Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><code>consecutive_weight</code></td>
+                                        <td>float</td>
+                                        <td>1.0</td>
+                                        <td>Weight for distance covered between consecutive touches by the same player.</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>pass_weight</code></td>
+                                        <td>float</td>
+                                        <td>1.0</td>
+                                        <td>Weight for distance covered by a pass to a teammate.</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>receive_weight</code></td>
+                                        <td>float</td>
+                                        <td>1.0</td>
+                                        <td>Weight for distance covered by a pass received from a teammate.</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>giveaway_weight</code></td>
+                                        <td>float</td>
+                                        <td>-1.0</td>
+                                        <td>Weight for distance covered by a pass (giveaway) to an opponent.</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>intercept_weight</code></td>
+                                        <td>float</td>
+                                        <td>1.0</td>
+                                        <td>Weight for distance covered by a pass intercepted from an opponent.</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>goal_weight</code></td>
+                                        <td>float</td>
+                                        <td>1.0</td>
+                                        <td>Weight for distance covered between a touch and a goal.</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>distance_normalization</code></td>
+                                        <td>float</td>
+                                        <td>None</td>
+                                        <td>Factor to normalize distance traveled between touches. Defaults to weighting a distance of the full length of the field as 1.0.</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>do_integral</code></td>
+                                        <td>bool</td>
+                                        <td>False</td>
+                                        <td>Whether to calculate the area under the ball's travel curve instead of the distance.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div class="training-section">
+                        <h2>Implementation</h2>
+                        
+                        <div class="code-section">
+                            <h3>BallTravelReward Class</h3>
+                            <p>Here's the complete implementation of the <code>BallTravelReward</code> class:</p>
+                            
+                            <div class="code-block">
+<pre><code class="language-python">from typing import List, Dict, Any
+
+import numpy as np
+from rlgym.api import RewardFunction, AgentID, StateType, RewardType
+from rlgym.rocket_league.api import GameState
+from rlgym.rocket_league.common_values import BACK_WALL_Y, CEILING_Z
+
+
+class BallTravelReward(RewardFunction[AgentID, GameState, float]):
+    def __init__(self, consecutive_weight=1.0,
+                 pass_weight=1.0, receive_weight=1.0,
+                 giveaway_weight=-1.0, intercept_weight=1.0,
+                 goal_weight=1.0,
+                 distance_normalization=None,
+                 do_integral=False):
+        """
+        Reward function based on the distance the ball travels between touches.
+
+        :param consecutive_weight: Weight for distance covered between consecutive touches by the same player.
+        :param pass_weight: Weight for distance covered by a pass to a teammate.
+        :param receive_weight: Weight for distance covered by a pass received from a teammate.
+        :param giveaway_weight: Weight for distance covered by a pass (giveaway) to an opponent.
+        :param intercept_weight: Weight for distance covered by a pass intercepted from an opponent.
+        :param goal_weight: Weight for distance covered between a touch and a goal.
+        :param distance_normalization: Factor to normalize distance travelled between touches.
+                                       Defaults to weighting a distance of the full length of the field as 1.0
+        :param do_integral: Whether to calculate the area under the ball's travel curve instead of the distance.
+        """
+        self.consecutive_weight = consecutive_weight
+        self.pass_weight = pass_weight
+        self.receive_weight = receive_weight
+        self.giveaway_weight = giveaway_weight
+        self.intercept_weight = intercept_weight
+        self.goal_weight = goal_weight
+
+        if distance_normalization is None:
+            if do_integral:
+                # Use the area of half a field length by half ceiling height
+                distance_normalization = 4 / (2 * BACK_WALL_Y * CEILING_Z)
+            else:
+                # Use the full length of the field
+                distance_normalization = 1 / (2 * BACK_WALL_Y)
+        self.normalization_factor = distance_normalization
+        self.do_integral = do_integral
+
+        self.prev_ball_pos = None
+        self.last_touch_agent = None
+        self.distance_since_touch = 0
+
+    def reset(self, agents: List[AgentID], initial_state: StateType, shared_info: Dict[str, Any]) -> None:
+        self.prev_ball_pos = initial_state.ball.position
+        self.last_touch_agent = None
+        self.distance_since_touch = 0
+
+    def get_rewards(self, agents: List[AgentID], state: GameState, is_terminated: Dict[AgentID, bool],
+                    is_truncated: Dict[AgentID, bool], shared_info: Dict[str, Any]) -> Dict[AgentID, float]:
+        ball_pos = state.ball.position
+
+        # Update the distance travelled by the ball
+        distance = np.linalg.norm(ball_pos - self.prev_ball_pos)
+        if self.do_integral:
+            # The path of the ball defines a right trapezoid (to a close approximation).
+            z_height = (ball_pos[2] + self.prev_ball_pos[2]) / 2
+            area = distance * z_height
+            distance = area
+        self.prev_ball_pos = ball_pos
+        self.distance_since_touch += distance
+
+        # Assign rewards based on the ball touches
+        rewards = {k: 0.0 for k in agents}
+        touching_agents = []  # This list is to remove dependence on agent order
+        for agent in agents:
+            car = state.cars[agent]
+            if car.ball_touches > 0:
+                if self.last_touch_agent is not None:
+                    norm_dist = self.distance_since_touch * self.normalization_factor
+                    if agent == self.last_touch_agent:
+                        # Consecutive touches
+                        rewards[agent] += norm_dist * self.consecutive_weight
+                    elif car.team_num == state.cars[self.last_touch_agent].team_num:
+                        # Pass to teammate
+                        rewards[agent] += norm_dist * self.receive_weight
+                        rewards[self.last_touch_agent] += norm_dist * self.pass_weight
+                    else:
+                        # Team change
+                        rewards[agent] += norm_dist * self.intercept_weight
+                        rewards[self.last_touch_agent] += norm_dist * self.giveaway_weight
+                touching_agents.append(agent)
+            elif car.is_demoed and self.last_touch_agent == agent:
+                self.last_touch_agent = None
+
+        if state.goal_scored and self.last_touch_agent is not None:
+            team = state.scoring_team
+            norm_dist = self.distance_since_touch * self.normalization_factor
+            mul = 1 if team == state.cars[self.last_touch_agent].team_num else -1
+            rewards[self.last_touch_agent] += mul * norm_dist * self.goal_weight
+
+        if len(touching_agents) > 0:
+            self.distance_since_touch = 0
+            # Update the last touch agent
+            if len(touching_agents) == 1:
+                self.last_touch_agent = touching_agents[0]
+            else:
+                # If multiple agents touch the ball in the same step, adjust rewards
+                for agent in agents:
+                    rewards[agent] /= len(touching_agents)
+                # and set last touch to be the one that is closest to the ball
+                closest_agent = min(touching_agents,
+                                    key=lambda x: np.linalg.norm(state.cars[x].physics.position - ball_pos))
+                self.last_touch_agent = closest_agent
+
+        shared_info["last_touch_agent"] = self.last_touch_agent
+        shared_info["distance_since_touch"] = self.distance_since_touch
+
+        return rewards</code></pre>
+                            </div>
+                        </div>
+                        
+                        <div class="training-description">
+                            <h3>Detailed Reward Mechanics</h3>
+                            <p>The <code>BallTravelReward</code> function implements a sophisticated reward system that evaluates ball movement and player interactions. Here's a detailed breakdown of how it works:</p>
+                            
+                            <h4>1. Ball Movement Tracking</h4>
+                            <p>The system continuously monitors the ball's position to calculate the distance traveled between frames:</p>
+                            <ul>
+                                <li><strong>Standard Distance</strong>: Uses Euclidean distance between the ball's current and previous positions</li>
+                                <li><strong>Integral Mode</strong> (<code>do_integral=True</code>): Considers the ball's height, rewarding aerial plays more significantly</li>
+                                <li><strong>Normalization</strong>: Distances are normalized by the field dimensions for consistent scaling</li>
+                            </ul>
+                            
+                            <h4>2. Touch-Based Reward Distribution</h4>
+                            <p>When a player touches the ball, the accumulated distance is converted into rewards based on the context:</p>
+                            
+                            <div class="reward-scenario">
+                                <h5>Consecutive Touches (Dribbling)</h5>
+                                <p><code>reward = distance * consecutive_weight</code></p>
+                                <p>Encourages maintaining possession and controlled ball movement.</p>
+                            </div>
+                            
+                            <div class="reward-scenario">
+                                <h5>Successful Pass</h5>
+                                <p><code>passer_reward = distance * pass_weight</code><br>
+                                <code>receiver_reward = distance * receive_weight</code></p>
+                                <p>Rewards both the passer and receiver to encourage team play.</p>
+                            </div>
+                            
+                            <div class="reward-scenario">
+                                <h5>Ball Recovery</h5>
+                                <p><code>intercept_reward = distance * intercept_weight</code><br>
+                                <code>giveaway_penalty = distance * giveaway_weight</code></p>
+                                <p>Penalizes losing possession while rewarding defensive plays.</p>
+                            </div>
+                            
+                            <div class="reward-scenario">
+                                <h5>Goal Scoring</h5>
+                                <p><code>goal_reward = distance * goal_weight * (1 for goal, -1 for own goal)</code></p>
+                                <p>Significantly rewards effective offensive plays leading to goals.</p>
+                            </div>
+                            
+                            <h4>3. State Management</h4>
+                            <p>The function maintains critical game state between frames:</p>
+                            <table class="state-table">
+                                <tr>
+                                    <th>State Variable</th>
+                                    <th>Purpose</th>
+                                    <th>Reset Condition</th>
+                                </tr>
+                                <tr>
+                                    <td><code>prev_ball_pos</code></td>
+                                    <td>Tracks ball movement between frames</td>
+                                    <td>Updated every frame</td>
+                                </tr>
+                                <tr>
+                                    <td><code>last_touch_agent</code></td>
+                                    <td>Identifies the last player to touch the ball</td>
+                                    <td>On new touch or demo</td>
+                                </tr>
+                                <tr>
+                                    <td><code>distance_since_touch</code></td>
+                                    <td>Accumulates ball travel distance</td>
+                                    <td>Reset on touch or goal</td>
+                                </tr>
+                            </table>
+                            
+                            <h4>4. Special Case Handling</h4>
+                            <p>The system includes logic for edge cases:</p>
+                            <ul>
+                                <li><strong>Simultaneous Touches</strong>: When multiple players touch the ball in the same frame, rewards are divided and the closest player is credited</li>
+                                <li><strong>Demolitions</strong>: If a player is demolished after touching the ball, their last touch is cleared</li>
+                                <li><strong>Goal Scoring</strong>: The last touch before a goal is always credited, with appropriate team-based rewards</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="training-section">
+                        <h2>Usage Examples</h2>
+                        
+                        <h3>Basic Usage</h3>
+                        <p>Here's how to use the <code>BallTravelReward</code> in your RLGym environment:</p>
+                        
+                        <div class="code-block">
+<pre><code class="language-python">from rlgym.api import make
+from ball_travel_reward import BallTravelReward
+
+# Create the environment with default parameters
+env = make(
+    reward_fn=BallTravelReward(),
+    # ... other environment parameters ...
+)</code></pre>
+                        </div>
+                        
+                        <h3>Customizing Weights</h3>
+                        <p>You can customize the weights for different types of ball movements:</p>
+                        
+                        <div class="code-block">
+<pre><code class="language-python"># Emphasize passing plays
+reward_fn = BallTravelReward(
+    consecutive_weight=0.5,  # Lower weight for solo plays
+    pass_weight=2.0,         # Higher weight for passing
+    receive_weight=1.5,      # Reward for receiving passes
+    giveaway_weight=-2.0,    # Strong penalty for giveaways
+    intercept_weight=1.5,    # Reward for interceptions
+    goal_weight=3.0          # Higher weight for goals
+)
+
+env = make(reward_fn=reward_fn)</code></pre>
+                        </div>
+                        
+                        <h3>Using Integral Mode</h3>
+                        <p>To reward aerial plays more than ground plays, enable the <code>do_integral</code> option:</p>
+                        
+                        <div class="code-block">
+<pre><code class="language-python"># Reward based on area under the ball's travel curve
+reward_fn = BallTravelReward(
+    do_integral=True,  # Consider ball height in distance calculations
+    consecutive_weight=1.0,
+    pass_weight=1.5,
+    receive_weight=1.0
+)</code></pre>
+                        </div>
+                    </div>
+                    
+                    <div class="training-section">
+                        <h2>Best Practices</h2>
+                        
+                        <h3>Balancing Weights</h3>
+                        <p>When configuring the reward function, consider the following guidelines:</p>
+                        <ul>
+                            <li>Set <code>giveaway_weight</code> to a negative value to discourage losing possession</li>
+                            <li>Balance <code>pass_weight</code> and <code>receive_weight</code> to encourage team play</li>
+                            <li>Use <code>goal_weight</code> to control how much emphasis is placed on scoring</li>
+                            <li>Adjust <code>consecutive_weight</ng> to encourage or discourage solo plays</li>
+                        </ul>
+                        
+                        <h3>Combining with Other Rewards</h3>
+                        <p>For more sophisticated training, combine <code>BallTravelReward</code> with other reward functions using RLGym's <code>CombinedReward</code>:</p>
+                        
+                        <div class="code-block">
+<pre><code class="language-python">from rlgym.api import CombinedReward
+from rlgym.rocket_league.rewards import VelocityPlayerToBallReward, TouchBallReward
+
+# Combine multiple rewards with different weights
+combined_reward = CombinedReward(
+    (BallTravelReward(), 0.7),           # 70% weight to ball travel rewards
+    (VelocityPlayerToBallReward(), 0.2),  # 20% weight to ball approach
+    (TouchBallReward(), 0.1)              # 10% weight to ball touches
+)
+
+env = make(reward_fn=combined_reward)</code></pre>
+                        </div>
+                        
+                        <h3>Monitoring Training</h3>
+                        <p>To monitor the effectiveness of the reward function during training, track the following metrics:</p>
+                        <ul>
+                            <li>Average reward per episode</li>
+                            <li>Number of passes per episode</li>
+                            <li>Average pass distance</li>
+                            <li>Possession time</li>
+                            <li>Goals scored</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <footer class="main-footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>LarryBot</h3>
+                    <p>Advanced Rocket League AI training and development tools.</p>
+                </div>
+                <div class="footer-section">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="../index.html">Home</a></li>
+                        <li><a href="../bot-tools.html">Bot Tools</a></li>
+                        <li><a href="../training-packs.html">Training Packs</a></li>
+                        <li><a href="../tutorials.html">Tutorials</a></li>
+                        <li><a href="../community.html">Community</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>Connect</h3>
+                    <div class="social-links">
+                        <a href="#" class="social-icon"><i class="fab fa-github"></i></a>
+                        <a href="#" class="social-icon"><i class="fab fa-discord"></i></a>
+                        <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="social-icon"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2023 LarryBot. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../script.js"></script>
+</body>
+</html>

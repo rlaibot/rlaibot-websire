@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Velocity Player To Ball Reward - A reward function for RLGym that rewards agents based on their velocity towards the ball">
+    <title>Rocket League Bot Training | Velocity Player To Ball Reward</title>
+    <link rel="icon" type="image/png" href="https://www.freepnglogos.com/uploads/rocket-league-logo-png/rocket-league-logo-png-1.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <style>
+        .training-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: rgba(26, 32, 44, 0.9);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            color: #ffffff;
+            line-height: 1.6;
+        }
+        
+        .training-background {
+            background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.8)), 
+                        url('https://images.unsplash.com/photo-1569505840673-3f5b24b6c1d9?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80');
+            background-size: cover;
+            background-position: center;
+            padding: 4rem 2rem;
+        }
+        
+        .training-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 2rem;
+            background: rgba(26, 32, 44, 0.8);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .training-header h1 {
+            color: #ffffff;
+            margin-bottom: 0.5rem;
+            font-size: 2.5rem;
+        }
+        
+        .training-header p {
+            color: #a0aec0;
+            font-size: 1.1rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .training-section {
+            margin-bottom: 3rem;
+            background: rgba(26, 32, 44, 0.6);
+            padding: 1.5rem;
+            border-radius: 8px;
+            border-left: 4px solid #4299e1;
+        }
+        
+        .training-section h2 {
+            color: #63b3ed;
+            margin-top: 0;
+            margin-bottom: 1.5rem;
+            font-size: 1.75rem;
+            border-bottom: 1px solid #2d3748;
+            padding-bottom: 0.5rem;
+        }
+        
+        .training-section h3 {
+            color: #90cdf4;
+            margin-top: 1.5rem;
+            margin-bottom: 1rem;
+            font-size: 1.4rem;
+        }
+        
+        .training-section h4 {
+            color: #a0aec0;
+            margin-top: 1.25rem;
+            margin-bottom: 0.75rem;
+            font-size: 1.1rem;
+        }
+        
+        .training-section p, .training-section li {
+            color: #e2e8f0;
+            font-size: 1rem;
+            line-height: 1.7;
+        }
+        
+        .training-section ul, .training-section ol {
+            padding-left: 1.5rem;
+            margin: 1rem 0;
+        }
+        
+        .training-section li {
+            margin-bottom: 0.5rem;
+        }
+        
+        code, pre {
+            font-family: 'Fira Code', monospace;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 4px;
+            padding: 0.2rem 0.4rem;
+            font-size: 0.9em;
+        }
+        
+        pre {
+            padding: 1rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+            border-radius: 6px;
+            position: relative;
+            background: #1e1e1e;
+            border: 1px solid #2d3748;
+        }
+        
+        pre code {
+            background: transparent;
+            padding: 0;
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+        
+        .code-block {
+            position: relative;
+            margin: 1.5rem 0;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .code-header {
+            display: flex;
+            justify-content: flex-end;
+            background: #2d3748;
+            padding: 0.5rem 1rem;
+            border-bottom: 1px solid #1a202c;
+        }
+        
+        .copy-btn {
+            background: #2d3748;
+            color: #a0aec0;
+            border: 1px solid #4a5568;
+            border-radius: 4px;
+            padding: 0.25rem 0.75rem;
+            cursor: pointer;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s ease;
+        }
+        
+        .copy-btn:hover {
+            background: #4a5568;
+            color: #ffffff;
+        }
+        
+        .copy-btn.copied {
+            background: #48bb78;
+            color: white;
+            border-color: #2f855a;
+        }
+        
+        .reward-documentation {
+            background: rgba(26, 32, 44, 0.5);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 1.5rem 0;
+            border-left: 4px solid #4299e1;
+        }
+        
+        .reward-component {
+            margin: 2rem 0;
+            padding: 1.5rem;
+            background: rgba(26, 32, 44, 0.5);
+            border-radius: 8px;
+            border-left: 4px solid #4299e1;
+        }
+        
+        .reward-component h4 {
+            color: #63b3ed;
+            margin-top: 0;
+            font-size: 1.2rem;
+        }
+        
+        .parameters-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            background: rgba(26, 32, 44, 0.7);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .parameters-table th, 
+        .parameters-table td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid #2d3748;
+        }
+        
+        .parameters-table th {
+            background: rgba(26, 32, 44, 0.9);
+            color: #63b3ed;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+        }
+        
+        .parameters-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .parameters-table code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9em;
+            color: #f6ad55;
+        }
+        
+        .tag {
+            display: inline-block;
+            background: rgba(66, 153, 225, 0.2);
+            color: #63b3ed;
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin: 0.2rem;
+            white-space: nowrap;
+        }
+        
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            color: #90cdf4;
+            text-decoration: none;
+            margin-bottom: 1.5rem;
+            transition: color 0.2s ease;
+        }
+        
+        .back-button:hover {
+            color: #63b3ed;
+            text-decoration: underline;
+        }
+        
+        .back-button i {
+            margin-right: 0.5rem;
+        }
+        
+        .component-method {
+            background: rgba(45, 55, 72, 0.5);
+            border-radius: 6px;
+            padding: 1.25rem;
+            margin: 1.25rem 0;
+            border-left: 3px solid #63b3ed;
+        }
+        
+        .component-method h5 {
+            color: #90cdf4;
+            margin-top: 0;
+            margin-bottom: 0.75rem;
+            font-size: 1.05rem;
+            display: flex;
+            align-items: center;
+        }
+        
+        .component-method h5::before {
+            content: '»';
+            color: #63b3ed;
+            margin-right: 0.5rem;
+            font-size: 1.2em;
+        }
+        
+        .component-method ul, .component-method ol {
+            margin: 0.75rem 0 0.5rem 1.5rem;
+            padding-left: 0.5rem;
+        }
+        
+        .component-method li {
+            margin-bottom: 0.4rem;
+            color: #e2e8f0;
+        }
+        
+        .component-method code {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9em;
+            color: #f6ad55;
+        }
+        
+        .math-equation {
+            background: rgba(45, 55, 72, 0.7);
+            padding: 1rem;
+            border-radius: 6px;
+            margin: 1rem 0;
+            font-family: 'Fira Code', monospace;
+            overflow-x: auto;
+        }
+        
+        @media (max-width: 768px) {
+            .training-content {
+                padding: 1.5rem;
+            }
+            
+            .training-header h1 {
+                font-size: 2rem;
+            }
+            
+            .training-header p {
+                font-size: 1rem;
+            }
+            
+            .training-section {
+                padding: 1.25rem;
+            }
+            
+            pre {
+                padding: 0.75rem;
+                font-size: 0.85em;
+            }
+        }
+    </style>
+    <script>
+        // Add copy button to all code blocks
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add copy button to each code block
+            document.querySelectorAll('pre').forEach((codeBlock, index) => {
+                // Create copy button
+                const button = document.createElement('button');
+                button.className = 'copy-btn';
+                button.innerHTML = '<i class="far fa-copy"></i>';
+                button.setAttribute('aria-label', 'Copy code');
+                
+                // Create container for the button
+                const container = document.createElement('div');
+                container.className = 'code-header';
+                container.style.display = 'flex';
+                container.style.justifyContent = 'flex-end';
+                
+                // Insert the button before the pre element
+                const pre = codeBlock.parentNode;
+                if (pre.parentNode) {
+                    pre.parentNode.insertBefore(container, pre);
+                    container.appendChild(button);
+                }
+
+                button.addEventListener('click', function() {
+                    // Create a temporary textarea to copy from
+                    const textarea = document.createElement('textarea');
+                    textarea.value = codeBlock.textContent;
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    
+                    try {
+                        // Copy the text
+                        document.execCommand('copy');
+                        button.innerHTML = '<i class="fas fa-check"></i>';
+                        button.classList.add('copied');
+                        
+                        // Reset button after 2 seconds
+                        setTimeout(function() {
+                            button.innerHTML = '<i class="far fa-copy"></i>';
+                            button.classList.remove('copied');
+                        }, 2000);
+                    } catch (err) {
+                        console.error('Failed to copy text: ', err);
+                    }
+                    
+                    // Clean up
+                    document.body.removeChild(textarea);
+                });
+            });
+        });
+    </script>
+</head>
+<body>
+    <header class="main-header">
+        <div class="container">
+            <nav class="navbar">
+                <a href="../index.html" class="logo">
+                    <img src="https://www.freepnglogos.com/uploads/rocket-league-logo-png/rocket-league-logo-png-1.png" alt="Rocket League Logo" class="rl-logo">
+                    <span>RL Bot Training</span>
+                </a>
+                <button class="hamburger" aria-label="Toggle navigation menu" aria-expanded="false">
+                    <span class="hamburger-box">
+                        <span class="hamburger-inner"></span>
+                    </span>
+                </button>
+                <ul class="nav-links">
+                    <li><a href="../index.html">Home</a></li>
+                    <li><a href="../training-packs.html" class="active">Training Packs</a></li>
+                    <li><a href="../bot-tools.html">Bot Tools</a></li>
+                    <li><a href="../tutorials.html">Tutorials</a></li>
+                    <li><a href="../community.html">Community</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <div class="training-background">
+        <section class="section">
+            <div class="container">
+                <a href="../training-packs.html" class="back-button">
+                    <i class="fas fa-arrow-left"></i> Back to Training Packs
+                </a>
+                
+                <div class="training-content">
+                    <div class="training-header">
+                        <h1>Velocity Player To Ball Reward</h1>
+                        <p>A sophisticated reward function that rewards agents based on their velocity component towards the ball, with multiple calculation methods for different training scenarios.</p>
+                        
+                        <div class="training-tags">
+                            <span class="tag"><i class="fas fa-robot"></i> RLGym</span>
+                            <span class="tag"><i class="fas fa-star"></i> Reward Function</span>
+                            <span class="tag"><i class="fas fa-bullseye"></i> Ball Chase</span>
+                            <span class="tag"><i class="fas fa-code"></i> Python</span>
+                        </div>
+                    </div>
+                    
+                    <div class="training-section">
+                        <h2>Overview</h2>
+                        <p>The <code>VelocityPlayerToBallReward</code> is a reward function that encourages agents to move efficiently toward the ball by rewarding velocity components in the direction of the ball. It offers three different calculation methods to suit various training scenarios.</p>
+                        
+                        <div class="reward-documentation">
+                            <h3>How It Works</h3>
+                            <p>The <code>VelocityPlayerToBallReward</code> class is a reward function that trains an agent (a car) to move towards the ball by rewarding it for increasing its velocity in the direction of the ball. The core of the class is the <code>_get_reward</code> method, which calculates a normalized value (typically between -1 and 1) representing the car's speed in the direction of the ball compared to the maximum possible speed.</p>
+                            
+                            <h4>Reward Calculation Methods</h4>
+                            <p>The class offers three different methods for calculating the reward, selected by the <code>use_trajectory_comparison</code> and <code>use_dot_quotient</code> parameters:</p>
+                            
+                            <h4>Core Concepts</h4>
+                            
+                            <div class="component-method">
+                                <h5>1. Dot Product Method (Default)</h5>
+                                <p>This is the most straightforward method. It calculates the dot product of the car's velocity vector and a normalized vector pointing from the car to the ball. This dot product measures how much of the car's velocity is aligned with the direction of the ball.</p>
+                                <div class="math-equation">
+                                    reward = (car_velocity · car_to_ball) / CAR_MAX_SPEED
+                                </div>
+                                <p>Key characteristics:</p>
+                                <ul>
+                                    <li>Simple and computationally efficient</li>
+                                    <li>Measures alignment between car's velocity and ball direction</li>
+                                    <li>Reward ranges from -1 (max speed away) to 1 (max speed toward)</li>
+                                    <li>Positive reward means moving towards the ball, negative means moving away</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="component-method">
+                                <h5>2. Trajectory Comparison Method</h5>
+                                <p>This method uses a separate <code>trajectory_comparison</code> function to find the minimum possible distance between the car's and the ball's projected paths. It rewards the car based on the change in distance between the car and the ball, using their respective current velocities and positions.</p>
+                                <div class="math-equation">
+                                    reward = (current_distance - min_possible_distance) / (time_to_impact * (CAR_MAX_SPEED + BALL_MAX_SPEED))
+                                </div>
+                                <p>Key characteristics:</p>
+                                <ul>
+                                    <li>Considers both car and ball movement</li>
+                                    <li>Rewards efficient interception paths</li>
+                                    <li>More computationally intensive but provides better guidance</li>
+                                    <li>Better for scenarios with fast-moving balls</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="component-method">
+                                <h5>3. Dot Quotient Method</h5>
+                                <p>Similar to the default method but normalizes the result differently. It calculates a value that represents the inverse of the time it would take the car to reach the ball's position if both continued on their current paths.</p>
+                                <div class="math-equation">
+                                    reward = (car_velocity · car_to_ball) / (ball_velocity · car_to_ball) / (CAR_MAX_SPEED / BALL_RADIUS)
+                                </div>
+                                <p>Key characteristics:</p>
+                                <ul>
+                                    <li>Measures time-to-impact rather than just velocity alignment</li>
+                                    <li>Normalized by ball radius for consistent scaling</li>
+                                    <li>Useful for timing-based approaches</li>
+                                    <li>Can be more stable in certain scenarios</li>
+                                </ul>
+                            </div>
+                            
+                            <h4>Key Features</h4>
+                            <ul>
+                                <li>Multiple calculation methods for different training scenarios</li>
+                                <li>Configurable to include or exclude negative rewards</li>
+                                <li>Efficient implementation with NumPy</li>
+                                <li>Handles edge cases like division by zero</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="training-section">
+                        <h2>Implementation</h2>
+                        <p>Here's the complete implementation of the Velocity Player To Ball Reward function:</p>
+                        
+                        <div class="code-block">
+                            <pre><code class="language-python">from typing import Any, Dict, List
+
+import numpy as np
+from rlgym.api import RewardFunction, AgentID
+from rlgym.rocket_league.api import GameState
+from rlgym.rocket_league.common_values import CAR_MAX_SPEED, BALL_MAX_SPEED, SIDE_WALL_X, BACK_WALL_Y, CEILING_Z, BALL_RADIUS
+
+
+class VelocityPlayerToBallReward(RewardFunction[AgentID, GameState, float]):
+    def __init__(self, include_negative_values: bool = True, 
+                 use_trajectory_comparison: bool = False,
+                 use_dot_quotient: bool = False):
+        """
+        Initialize the VelocityPlayerToBallReward.
+        
+        Args:
+            include_negative_values: If True, returns negative values when moving away from the ball.
+                                   If False, clamps the minimum reward at 0.
+            use_trajectory_comparison: If True, uses trajectory comparison method for reward calculation.
+            use_dot_quotient: If True, uses dot quotient method for reward calculation.
+                            If both flags are False, uses basic velocity projection.
+        """
+        self.include_negative_values = include_negative_values
+        self.use_trajectory_comparison = use_trajectory_comparison
+        self.use_dot_quotient = use_dot_quotient
+
+    def reset(self, agents: List[AgentID], initial_state: GameState, 
+              shared_info: Dict[str, Any]) -> None:
+        """Reset the reward function for a new episode."""
+        pass
+
+    def get_rewards(self, agents: List[AgentID], state: GameState, 
+                   is_terminated: Dict[AgentID, bool],
+                   is_truncated: Dict[AgentID, bool], 
+                   shared_info: Dict[str, Any]) -> Dict[AgentID, float]:
+        """
+        Calculate rewards for all agents based on their velocity toward the ball.
+        
+        Returns:
+            Dictionary mapping agent IDs to their respective rewards.
+        """
+        return {agent: self._get_reward(agent, state) for agent in agents}
+
+    def _get_reward(self, agent: AgentID, state: GameState):
+        ball = state.ball
+        car = state.cars[agent].physics
+        
+        if self.use_trajectory_comparison:
+            # Use trajectory comparison method
+            curr_dist, min_dist, t = trajectory_comparison(
+                car.position, car.linear_velocity,
+                ball.position, ball.linear_velocity
+            )
+            vel = (curr_dist - min_dist) / t if t != 0 else 0
+            norm_vel = vel / (CAR_MAX_SPEED + BALL_MAX_SPEED)
+            if abs(norm_vel) > 1:  # Handle floating point errors
+                norm_vel = np.sign(norm_vel)
+                
+        elif self.use_dot_quotient:
+            # Use dot quotient method
+            car_to_ball = ball.position - car.position
+            car_to_ball = car_to_ball / np.linalg.norm(car_to_ball)
+
+            # Vector version of v=d/t <=> t=d/v <=> 1/t=v/d which becomes v . d / |d|^2
+            vd = np.dot(car_to_ball, car.linear_velocity)
+            dd = np.dot(car_to_ball, ball.linear_velocity)
+            inv_time = vd / dd if dd != 0 else 0
+            norm_vel = inv_time / (CAR_MAX_SPEED / BALL_RADIUS)
+            
+        else:
+            # Basic velocity projection method
+            car_to_ball = ball.position - car.position
+            car_to_ball = car_to_ball / np.linalg.norm(car_to_ball)
+
+            vel = np.dot(car_to_ball, car.linear_velocity)
+            norm_vel = vel / CAR_MAX_SPEED
+            
+        # Return either signed or non-negative reward
+        return norm_vel if self.include_negative_values else max(0, norm_vel)
+
+
+def trajectory_comparison(pos1, vel1, pos2, vel2, check_bounds=True):
+    """
+    Calculate the closest point between two trajectories, defined as the lines:
+      pos1 + t * vel1
+      pos2 + t * vel2
+    
+    Returns:
+        tuple: (current_distance, min_distance, time_to_min_distance)
+    """
+    # First, find max time based on field bounds
+    if check_bounds:
+        max_time = np.inf
+        for pos, vel in (pos1, vel1), (pos2, vel2):
+            bounds = np.array([[-SIDE_WALL_X, -BACK_WALL_Y, 0],
+                             [SIDE_WALL_X, BACK_WALL_Y, CEILING_Z]])
+            times = (bounds - pos) / (vel + (vel == 0))
+            times = times[times > 0]
+            t = np.min(times) if len(times) > 0 else max_time
+            max_time = min(max_time, t)
+
+    # The distance between the two rays is `||pos1 + t * vel1 - pos2 - t * vel2||`
+    # This is equivalent to `||(pos1 - pos2) + t * (vel1 - vel2)||`
+    pos_diff = pos1 - pos2
+    vel_diff = vel1 - vel2
+
+    # The minimum distance is achieved when the derivative of the distance is 0.
+    # E.g. `d/dt * sqrt((p_x+t*v_x)^2+(p_y+t*v_y)^2+(p_z+t*v_z)^2)=0`
+    # This is equivalent to
+    #    `d/dt * (p_x+t*v_x)^2+(p_y+t*v_y)^2+(p_z+t*v_z)^2=0`
+    # => `2*(p_x+t*v_x)*v_x+2*(p_y+t*v_y)*v_y+2*(p_z+t*v_z)*v_z=0`
+    # => `p_x*v_x+p_y*v_y+p_z*v_z+t*(v_x^2+v_y^2+v_z^2)=0`
+    # => `t=-(p_x*v_x+p_y*v_y+p_z*v_z)/(v_x^2+v_y^2+v_z^2)`
+    denom = np.dot(vel_diff, vel_diff)
+    if denom == 0:
+        t = 0
+    else:
+        t = -np.dot(pos_diff, vel_diff) / denom
+
+    if t > max_time:
+        t = max_time
+
+    # The minimum distance is then the distance at this time.
+    curr_dist = np.linalg.norm(pos_diff)
+    min_dist = np.linalg.norm(pos_diff + t * vel_diff)
+
+    return curr_dist, min_dist, t</code></pre>
+                        </div>
+                    </div>
+                    
+                    <div class="training-section">
+                        <h2>Usage Examples</h2>
+                        
+                        <div class="reward-component">
+                            <h4>Basic Usage</h4>
+                            <p>Here's how to use the VelocityPlayerToBallReward with default settings (basic velocity projection):</p>
+                            <div class="code-block">
+                                <pre><code class="language-python">from rlgym.envs import make
+from velocity_player_to_ball_reward import VelocityPlayerToBallReward
+
+# Create environment with default settings (basic velocity projection)
+env = make(
+    reward_fn=VelocityPlayerToBallReward(
+        include_negative_values=True,
+        use_trajectory_comparison=False,
+        use_dot_quotient=False
+    ),
+    # ... other environment parameters
+)</code></pre>
+                            </div>
+                        </div>
+                        
+                        <div class="reward-component">
+                            <h4>Using Trajectory Comparison</h4>
+                            <p>For more sophisticated ball chasing behavior, use the trajectory comparison method:</p>
+                            <div class="code-block">
+                                <pre><code class="language-python">from rlgym.envs import make
+from velocity_player_to_ball_reward import VelocityPlayerToBallReward
+
+# Create environment with trajectory comparison
+env = make(
+    reward_fn=VelocityPlayerToBallReward(
+        include_negative_values=True,
+        use_trajectory_comparison=True,  # Enable trajectory comparison
+        use_dot_quotient=False
+    ),
+    # ... other environment parameters
+)</code></pre>
+                            </div>
+                        </div>
+                        
+                        <div class="reward-component">
+                            <h4>Combining with Other Rewards</h4>
+                            <p>You can combine this reward with others using RLGym's CombinedReward:</p>
+                            <div class="code-block">
+                                <pre><code class="language-python">from rlgym.envs import make
+from rlgym.rewards import CombinedReward
+from velocity_player_to_ball_reward import VelocityPlayerToBallReward
+from some_other_rewards import TouchBallReward, BoostReward
+
+# Create a combined reward function
+combined_reward = CombinedReward(
+    (VelocityPlayerToBallReward(use_trajectory_comparison=True), 0.6),
+    (TouchBallReward(), 0.3),
+    (BoostReward(), 0.1)
+)
+
+# Create environment with combined rewards
+env = make(
+    reward_fn=combined_reward,
+    # ... other environment parameters
+)</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="training-section">
+                        <h2>Best Practices</h2>
+                        
+                        <div class="reward-component">
+                            <h4>When to Use Each Method</h4>
+                            <ul>
+                                <li><strong>Basic Velocity Projection</strong> (default):
+                                    <ul>
+                                        <li>Simple and computationally efficient</li>
+                                        <li>Good for basic ball chasing behavior</li>
+                                        <li>May not handle fast-moving balls optimally</li>
+                                    </ul>
+                                </li>
+                                <li><strong>Trajectory Comparison</strong>:
+                                    <ul>
+                                        <li>More sophisticated interception behavior</li>
+                                        <li>Better for fast-moving balls</li>
+                                        <li>Slightly more computationally expensive</li>
+                                    </ul>
+                                </li>
+                                <li><strong>Dot Quotient</strong>:
+                                    <ul>
+                                        <li>Good for time-to-impact estimation</n>

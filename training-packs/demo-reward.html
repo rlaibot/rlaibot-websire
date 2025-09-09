@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Demo Reward - Reward function for demos and bumps in RLGym">
+    <title>Rocket League Bot Training | Demo Reward</title>
+    <link rel="icon" type="image/png" href="https://www.freepnglogos.com/uploads/rocket-league-logo-png/rocket-league-logo-png-1.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <script>
+        // Add copy button to all code blocks
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add copy button to each code block
+            document.querySelectorAll('pre code').forEach(function(codeBlock) {
+                const button = document.createElement('button');
+                button.className = 'copy-button';
+                button.type = 'button';
+                button.title = 'Copy to clipboard';
+                button.innerHTML = '<i class="far fa-copy"></i>';
+                
+                // Create container for the button
+                const container = document.createElement('div');
+                container.className = 'code-header';
+                container.style.display = 'flex';
+                container.style.justifyContent = 'flex-end';
+                
+                // Insert the button before the pre element
+                const pre = codeBlock.parentNode;
+                if (pre.parentNode) {
+                    pre.parentNode.insertBefore(container, pre);
+                    container.appendChild(button);
+                }
+
+                button.addEventListener('click', function() {
+                    // Create a temporary textarea to copy from
+                    const textarea = document.createElement('textarea');
+                    textarea.value = codeBlock.textContent;
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    
+                    try {
+                        // Copy the text
+                        document.execCommand('copy');
+                        button.innerHTML = '<i class="fas fa-check"></i>';
+                        button.classList.add('copied');
+                        
+                        // Reset button after 2 seconds
+                        setTimeout(function() {
+                            button.innerHTML = '<i class="far fa-copy"></i>';
+                            button.classList.remove('copied');
+                        }, 2000);
+                    } catch (err) {
+                        console.error('Failed to copy text: ', err);
+                    }
+                    
+                    // Clean up
+                    document.body.removeChild(textarea);
+                });
+            });
+        });
+    </script>
+    <style>
+        pre {
+            margin: 0;
+            padding: 0;
+            background: none;
+            font-family: 'Fira Code', 'Courier New', monospace;
+            white-space: pre;
+            word-wrap: normal;
+        }
+        
+        code {
+            font-family: 'Fira Code', 'Courier New', monospace;
+            font-size: 0.95rem;
+        }
+        
+        .training-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: rgba(26, 32, 44, 0.9);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .training-background {
+            background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.8)), 
+                        url('https://images.unsplash.com/photo-1569505840673-3f5b24b6c1d9?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80');
+            background-size: cover;
+            background-position: center;
+            padding: 4rem 0;
+            margin-top: -1rem;
+        }
+        
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #90cdf4;
+            text-decoration: none;
+            margin-bottom: 1.5rem;
+            font-weight: 500;
+            transition: color 0.2s ease;
+        }
+        
+        .back-button:hover {
+            color: #63b3ed;
+        }
+        
+        .reward-documentation {
+            background: rgba(45, 55, 72, 0.5);
+            border-left: 4px solid #3b82f6;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .training-section h2 {
+            color: #63b3ed;
+            margin: 2.5rem 0 1.5rem 0;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #2c5282;
+            font-weight: 600;
+            font-size: 1.75rem;
+        }
+        
+        .training-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 2rem;
+            background: rgba(26, 32, 44, 0.8);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .training-header h1 {
+            color: #ffffff;
+            margin-bottom: 0.5rem;
+            font-size: 2.5rem;
+        }
+        
+        .training-header p {
+            color: #cbd5e0;
+            font-size: 1.15rem;
+            max-width: 800px;
+            margin: 0 auto 1.5rem;
+            line-height: 1.7;
+        }
+        
+        .training-tags {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0.5rem;
+            margin: 1.5rem 0;
+        }
+        
+        .tag {
+            background: rgba(49, 130, 206, 0.2);
+            color: #90cdf4;
+            padding: 0.4rem 0.8rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            border: 1px solid rgba(99, 179, 237, 0.3);
+            transition: all 0.2s ease;
+        }
+        
+        .tag:hover {
+            background: rgba(49, 130, 206, 0.3);
+            transform: translateY(-1px);
+        }
+        
+        .tag i {
+            margin-right: 0.3rem;
+        }
+        
+        .code-section {
+            margin: 2.5rem 0;
+            position: relative;
+        }
+        
+        .code-block {
+            position: relative;
+            background: #1a202c;
+            color: #e2e8f0;
+            padding: 1.5rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+            font-family: 'Fira Code', 'Courier New', monospace;
+            border: 1px solid #2d3748;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .code-block pre {
+            margin: 0;
+            padding: 0;
+            background: none;
+            font-family: inherit;
+            white-space: pre;
+            word-wrap: normal;
+        }
+        
+        .copy-button {
+            background: #2d3748;
+            color: #a0aec0;
+            border: 1px solid #4a5568;
+            border-radius: 4px;
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            z-index: 10;
+            transition: all 0.2s ease;
+        }
+        
+        .copy-button:hover {
+            background: #4a5568;
+            color: #e2e8f0;
+        }
+        
+        .copy-button.copied {
+            background: #2f855a;
+            border-color: #38a169;
+            transform: scale(0.95);
+        }
+        
+        /* Syntax highlighting for code blocks */
+        .token.comment,
+        .token.prolog,
+        .token.doctype,
+        .token.cdata {
+            color: #6b7280;
+        }
+        
+        .token.punctuation {
+            color: #e5e7eb;
+        }
+        
+        .token.property,
+        .token.tag,
+        .token.boolean,
+        .token.number,
+        .token.constant,
+        .token.symbol,
+        .token.deleted {
+            color: #f472b6;
+        }
+        
+        .token.selector,
+        .token.attr-name,
+        .token.string,
+        .token.char,
+        .token.builtin,
+        .token.inserted {
+            color: #34d399;
+        }
+        
+        .token.operator,
+        .token.entity,
+        .token.url,
+        .language-css .token.string,
+        .style .token.string {
+            color: #93c5fd;
+        }
+        
+        .token.atrule,
+        .token.attr-value,
+        .token.keyword {
+            color: #60a5fa;
+        }
+        
+        .token.function,
+        .token.class-name {
+            color: #fbbf24;
+        }
+        
+        .token.regex,
+        .token.important,
+        .token.variable {
+            color: #f59e0b;
+        }
+        
+        .training-section p, .training-section li {
+            color: #e2e8f0;
+            line-height: 1.8;
+            margin-bottom: 1.2rem;
+            font-size: 1.05rem;
+        }
+        
+        .training-section h3 {
+            color: #90cdf4;
+            margin: 2rem 0 1rem 0;
+            font-weight: 500;
+            font-size: 1.4rem;
+            position: relative;
+            padding-left: 1rem;
+            border-left: 3px solid #3b82f6;
+        }
+        
+        .training-section ul, .training-section ol {
+            margin: 1.2rem 0;
+            padding-left: 1.5rem;
+        }
+        
+        .training-section li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .parameters-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            background: rgba(45, 55, 72, 0.5);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .parameters-table th, 
+        .parameters-table td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid #2d3748;
+        }
+        
+        .parameters-table th {
+            background: #2d3748;
+            color: #63b3ed;
+            font-weight: 500;
+        }
+        
+        .parameters-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .parameters-table code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .training-content {
+                padding: 1rem;
+            }
+            
+            .training-header {
+                padding: 1.5rem 1rem;
+            }
+            
+            .training-header h1 {
+                font-size: 2rem;
+            }
+            
+            .training-section h2 {
+                font-size: 1.5rem;
+            }
+            
+            .code-block {
+                padding: 1rem;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="main-header">
+        <div class="container">
+            <nav class="navbar">
+                <a href="../index.html" class="logo">
+                    <img src="../images/logo.png" alt="LarryBot Logo" class="logo-img">
+                    <span class="logo-text">LarryBot</span>
+                </a>
+                <ul class="nav-links">
+                    <li><a href="../index.html">Home</a></li>
+                    <li><a href="../bot-tools.html">Bot Tools</a></li>
+                    <li><a href="../training-packs.html" class="active">Training Packs</a></li>
+                    <li><a href="../tutorials.html">Tutorials</a></li>
+                    <li><a href="../community.html">Community</a></li>
+                </ul>
+                <div class="hamburger">
+                    <div class="line"></div>
+                    <div class="line"></div>
+                    <div class="line"></div>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <div class="training-background">
+        <section class="section">
+            <div class="container">
+                <a href="../training-packs.html" class="back-button">
+                    <i class="fas fa-arrow-left"></i> Back to Training Packs
+                </a>
+                
+                <div class="training-content">
+                    <div class="training-header">
+                        <h1>Demo Reward</h1>
+                        <p>A reward function that encourages strategic demos and bumps in RLGym, with configurable rewards for attackers and punishments for victims.</p>
+                        
+                        <div class="training-tags">
+                            <span class="tag"><i class="fas fa-tag"></i> RLGym</span>
+                            <span class="tag"><i class="fas fa-car-crash"></i> Demos & Bumps</span>
+                            <span class="tag"><i class="fas fa-robot"></i> AI Training</span>
+                            <span class="tag"><i class="fas fa-code"></i> Python</span>
+                        </div>
+                    </div>
+                    
+                    <div class="training-section">
+                        <h2>Overview</h2>
+                        <p>This Python code defines a <code>DemoReward</code> class, a custom reward function for a reinforcement learning environment based on the game Rocket League. This function incentivizes agents to perform "demolitions" and "bumps," which are actions in the game where one player's car destroys or forcefully impacts another player's car. The rewards and punishments are distributed to an agent based on their actions within the game environment.</p>
+                        
+                        <div class="reward-documentation">
+                            <h3>Key Features</h3>
+                            
+                            <h4>Demolition Reward</h4>
+                            <p>The agent who successfully demolishes another player receives a positive reward (<code>attacker_reward</code>), while the victim of the demolition receives a negative reward (<code>victim_punishment</code>). This encourages the agent to seek out and destroy opponents.</p>
+                            
+                            <h4>Bumping Reward</h4>
+                            <p>The function also rewards agents for bumping opponents. The reward for a bump is proportional to the acceleration experienced by the victim's car, which is a proxy for the force of the bump. This is a subtle yet important aspect, as it rewards forceful contact even if it doesn't result in a demolition.</p>
+                            
+                            <h4>Team Awareness</h4>
+                            <p>It differentiates between bumping opponents and teammates. The bump reward is positive for bumping an opponent and negative for bumping a teammate, which discourages friendly fire.</p>
+                            
+                            <h4>State Tracking</h4>
+                            <p>The class tracks the previous game state to detect a new demolition, ensuring that the reward is given only once per demolition event. It also uses this state to calculate the change in velocity (acceleration) of a bumped car.</p>
+                            
+                            <h3>Parameters</h3>
+                            <ul>
+                                <li><strong>attacker_reward</strong> (float, default=1.0): The amount of reward given to the agent who successfully demolishes an opponent.</li>
+                                <li><strong>victim_punishment</strong> (float, default=1.0): The amount of punishment (negative reward) given to the agent who is demolished.</li>
+                                <li><strong>bump_acceleration_reward</strong> (float, default=0.0): The scaling factor for the reward given for a bump. The reward is calculated by multiplying this value by the victim's acceleration normalized by the maximum car speed.</li>
+                            </ul>
+                            
+                            <p>This implementation is efficient with minimal computational overhead, making it suitable for training reinforcement learning agents in the RLGym environment.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="training-section">
+                        <h2>Implementation</h2>
+                        
+                        <div class="code-section">
+                            <h3>DemoReward Class</h3>
+                            <p>Here's the complete implementation of the <code>DemoReward</code> class:</p>
+                            
+                            <div class="code-block">
+<pre><code class="language-python">from typing import Any, Dict, List
+
+import numpy as np
+from rlgym.api import RewardFunction, AgentID
+from rlgym.rocket_league.api import GameState
+from rlgym.rocket_league.common_values import CAR_MAX_SPEED
+
+
+class DemoReward(RewardFunction[AgentID, GameState, float]):
+    def __init__(self, attacker_reward: float = 1.0, victim_punishment: float = 1.0,
+                 bump_acceleration_reward: float = 0.0):
+        """
+        Reward function that rewards agents for demos and bumps.
+
+        :param attacker_reward: Reward given to the agent who performs a demo
+        :param victim_punishment: Punishment given to the agent who gets demoed
+        :param bump_acceleration_reward: Reward multiplier based on acceleration caused by bumps
+        """
+        self.attacker_reward = attacker_reward
+        self.victim_punishment = victim_punishment
+        self.bump_acceleration_reward = bump_acceleration_reward
+
+        self.prev_state = None
+
+    def reset(self, agents: List[AgentID], initial_state: GameState, shared_info: Dict[str, Any]) -> None:
+        self.prev_state = initial_state
+
+    def get_rewards(self, agents: List[AgentID], state: GameState, is_terminated: Dict[AgentID, bool],
+                    is_truncated: Dict[AgentID, bool], shared_info: Dict[str, Any]) -> Dict[AgentID, float]:
+        rewards = {agent: 0 for agent in agents}
+        for agent in agents:
+            car = state.cars[agent]
+            victim = car.bump_victim_id
+            if victim is not None:
+                victim_car = state.cars[victim]
+                if victim_car.is_demoed:
+                    if not self.prev_state.cars[victim].is_demoed:
+                        rewards[agent] += self.attacker_reward
+                        rewards[victim] -= self.victim_punishment
+                else:
+                    acceleration = np.linalg.norm(state.cars[victim].physics.linear_velocity
+                                                  - self.prev_state.cars[victim].physics.linear_velocity)
+                    is_teammate = car.team_num == victim_car.team_num
+                    reward = self.bump_acceleration_reward * acceleration / CAR_MAX_SPEED
+                    rewards[agent] += reward if not is_teammate else -reward
+
+        self.prev_state = state
+
+        return rewards</code></pre>
+                            </div>
+                        </div>
+                        
+                        <div class="training-description">
+                            <h3>How the Reward System Works</h3>
+                            <p>The <code>DemoReward</code> function provides rewards and punishments based on demo and bump interactions between agents. The reward calculation follows these rules:</p>
+                            
+                            <h4>Demo Rewards</h4>
+                            <ul>
+                                <li>When an agent demos another agent, the attacker receives <code>attacker_reward</code></li>
+                                <li>The demoed agent (victim) receives <code>-victim_punishment</code></li>
+                                <li>Demos are only rewarded once per occurrence</li>
+                            </ul>
+                            
+                            <h4>Bump Rewards</h4>
+                            <ul>
+                                <li>When an agent bumps another agent (without demoing), the reward is based on the acceleration caused by the bump</li>
+                                <li>The reward is calculated as: <code>bump_acceleration_reward * (acceleration / CAR_MAX_SPEED)</code></li>
+                                <li>If the bump is against an opponent, the agent receives a positive reward</li>
+                                <li>If the bump is against a teammate, the agent receives a negative reward (penalty)</li>
+                            </ul>
+                            
+                            <h4>Parameters</h4>
+                            <table class="parameters-table">
+                                <thead>
+                                    <tr>
+                                        <th>Parameter</th>
+                                        <th>Type</th>
+                                        <th>Default</th>
+                                        <th>Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><code>attacker_reward</code></td>
+                                        <td><code>float</code></td>
+                                        <td><code>1.0</code></td>
+                                        <td>Reward given to the agent who performs a demo</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>victim_punishment</code></td>
+                                        <td><code>float</code></td>
+                                        <td><code>1.0</code></td>
+                                        <td>Punishment given to the agent who gets demoed</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>bump_acceleration_reward</code></td>
+                                        <td><code>float</code></td>
+                                        <td><code>0.0</code></td>
+                                        <td>Reward multiplier based on acceleration caused by bumps</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            
+                            <h4>Usage Example</h4>
+                            <p>Here's how you can use the <code>DemoReward</code> in your RLGym environment:</p>
+                            
+                            <div class="code-block">
+<pre><code class="language-python">from rlgym.api import make
+from demo_reward import DemoReward
+
+# Create the environment with DemoReward
+env = make(
+    reward_fn=DemoReward(
+        attacker_reward=2.0,        # Higher reward for demos
+        victim_punishment=1.5,      # Slight punishment for being demoed
+        bump_acceleration_reward=0.5  # Small reward for bumps
+    ),
+    # ... other environment parameters ...
+)
+
+# Now the environment will reward agents for strategic demos and bumps
+obs = env.reset()
+done = False
+while not done:
+    # Your agent's action selection logic here
+    action = env.action_space.sample()
+    obs, reward, terminated, truncated, info = env.step(action)
+    done = terminated or truncated</code></pre>
+                            </div>
+                            
+                            <h4>Customization Tips</h4>
+                            <p>Here are some ways to customize the <code>DemoReward</code> for your needs:</p>
+                            
+                            <div class="code-block">
+<pre><code class="language-python"># Emphasize demos over bumps
+demo_focused = DemoReward(
+    attacker_reward=3.0,
+    victim_punishment=1.0,
+    bump_acceleration_reward=0.1
+)
+
+# Focus on bumps with small demo rewards
+bump_focused = DemoReward(
+    attacker_reward=0.5,
+    victim_punishment=0.5,
+    bump_acceleration_reward=1.0
+)
+
+# Penalize team bumps more heavily
+team_aware = DemoReward(
+    attacker_reward=1.0,
+    victim_punishment=1.0,
+    bump_acceleration_reward=0.5
+)
+# Note: Team bumps are already penalized in the base implementation</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="training-section">
+                        <h2>Best Practices</h2>
+                        
+                        <h3>When to Use This Reward</h3>
+                        <p>The <code>DemoReward</code> is particularly useful in the following scenarios:</p>
+                        <ul>
+                            <li><strong>Aggressive Play</strong>: Training agents to be more aggressive and strategic with demos</li>
+                            <li>Defensive Training: Teaching agents to avoid being demoed</li>
+                            <li>Tactical Play: Encouraging smart bump plays to disrupt opponents</li>
+                        </ul>
+                        
+                        <h3>Combining with Other Rewards</h3>
+                        <p>For more sophisticated training, combine <code>DemoReward</code> with other reward functions using RLGym's <code>CombinedReward</code>:</p>
+                        
+                        <div class="code-block">
+<pre><code class="language-python">from rlgym.api import CombinedReward
+from rlgym.rocket_league.rewards import VelocityPlayerToBallReward, TouchBallReward
+
+# Combine multiple rewards with different weights
+combined_reward = CombinedReward(
+    (DemoReward(attacker_reward=1.0, victim_punishment=1.0), 0.3),  # 30% weight to demo rewards
+    (VelocityPlayerToBallReward(), 0.5),                           # 50% weight to ball approach
+    (TouchBallReward(), 0.2)                                       # 20% weight to ball touches
+)
+
+env = make(reward_fn=combined_reward)</code></pre>
+                        </div>
+                        
+                        <h3>Tuning Tips</h3>
+                        <ul>
+                            <li><strong>Start Small</strong>: Begin with small reward values to avoid overfitting to demo behavior</li>
+                            <li>Balance Rewards: Ensure demo rewards are balanced with other gameplay rewards</li>
+                            <li>Monitor Behavior: Watch for agents that might learn to prioritize demos over scoring</li>
+                            <li>Adjust for Teams: Consider reducing rewards for team demos in team-based scenarios</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="training-section">
+                        <h2>Advanced Usage</h2>
+                        
+                        <h3>Custom Demo Detection</h3>
+                        <p>You can extend the <code>DemoReward</code> class to implement custom demo detection logic. For example, you might want to only reward demos that occur in certain areas of the field or under specific conditions:</p>
+                        
+                        <div class="code-block">
+<pre><code class="language-python">class CustomDemoReward(DemoReward):
+    def get_rewards(self, agents: List[AgentID], state: GameState, is_terminated: Dict[AgentID, bool],
+                   is_truncated: Dict[AgentID, bool], shared_info: Dict[str, Any]) -> Dict[AgentID, float]:
+        rewards = super().get_rewards(agents, state, is_terminated, is_truncated, shared_info)
+        
+        # Add custom demo logic here
+        for agent in agents:
+            car = state.cars[agent]
+            victim = car.bump_victim_id
+            
+            if victim is not None and state.cars[victim].is_demoed:
+                # Example: Only reward demos in the opponent's half
+                if car.position[0] > 0:  # Assuming positive x is opponent's half
+                    rewards[agent] += self.attacker_reward * 0.5  # Bonus for offensive demos
+                else:
+                    rewards[agent] -= self.attacker_reward * 0.2  # Small penalty for defensive demos
+        
+        return rewards</code></pre>
+                        </div>
+                        
+                        <h3>Visualizing Demo Impact</h3>
+                        <p>To better understand how different reward parameters affect agent behavior, you can create visualizations. Here's an example of how to plot demo statistics over time:</p>
+                        
+                        <div class="code-block">
+<pre><code class="language-python">import matplotlib.pyplot as plt
+
+def plot_demo_statistics(episode_data):
+    """Plot demo statistics over multiple episodes."""
+    episodes = range(1, len(episode_data) + 1)
+    demos = [data['demos'] for data in episode_data]
+    bumps = [data['bumps'] for data in episode_data]
+    
+    plt.figure(figsize=(12, 6))
+    
+    plt.subplot(1, 2, 1)
+    plt.plot(episodes, demos, 'r-', label='Demos')
+    plt.xlabel('Episode')
+    plt.ylabel('Number of Demos')
+    plt.title('Demos per Episode')
+    plt.grid(True, alpha=0.3)
+    
+    plt.subplot(1, 2, 2)
+    plt.plot(episodes, bumps, 'b-', label='Bumps')
+    plt.xlabel('Episode')
+    plt.ylabel('Number of Bumps')
+    plt.title('Bumps per Episode')
+    plt.grid(True, alpha=0.3)
+    
+    plt.tight_layout()
+    plt.show()
+
+# Example usage in training loop
+episode_stats = []
+for episode in range(100):
+    obs = env.reset()
+    done = False
+    episode_data = {'demos': 0, 'bumps': 0}
+    
+    while not done:
+        actions = {agent: env.action_space.sample() for agent in env.agents}
+        obs, rewards, terminated, truncated, info = env.step(actions)
+        
+        # Track demo and bump events
+        for agent in env.agents:
+            car = env.state.cars[agent]
+            if car.bump_victim_id is not None:
+                if env.state.cars[car.bump_victim_id].is_demoed:
+                    episode_data['demos'] += 1
+                else:
+                    episode_data['bumps'] += 1
+        
+        done = any(terminated.values()) or all(truncated.values())
+    
+    episode_stats.append(episode_data)
+
+# Plot the results
+plot_demo_statistics(episode_stats)</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <footer class="main-footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>LarryBot</h3>
+                    <p>Advanced Rocket League AI training and development tools.</p>
+                </div>
+                <div class="footer-section">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="../index.html">Home</a></li>
+                        <li><a href="../bot-tools.html">Bot Tools</a></li>
+                        <li><a href="../training-packs.html">Training Packs</a></li>
+                        <li><a href="../tutorials.html">Tutorials</a></li>
+                        <li><a href="../community.html">Community</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>Connect</h3>
+                    <div class="social-links">
+                        <a href="#" class="social-icon"><i class="fab fa-github"></i></a>
+                        <a href="#" class="social-icon"><i class="fab fa-discord"></i></a>
+                        <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="social-icon"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2023 LarryBot. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../script.js"></script>
+</body>
+</html>

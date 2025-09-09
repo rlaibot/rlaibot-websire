@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Wavedash Reward - A reward function for RLGym that encourages effective wavedashing">
+    <title>Rocket League Bot Training | Wavedash Reward</title>
+    <link rel="icon" type="image/png" href="https://www.freepnglogos.com/uploads/rocket-league-logo-png/rocket-league-logo-png-1.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <style>
+        .training-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: rgba(26, 32, 44, 0.9);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            color: #ffffff;
+            line-height: 1.6;
+        }
+        
+        .training-background {
+            background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.8)), 
+                        url('https://images.unsplash.com/photo-1569505840673-3f5b24b6c1d9?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80');
+            background-size: cover;
+            background-position: center;
+            padding: 4rem 2rem;
+        }
+        
+        .training-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 2rem;
+            background: rgba(26, 32, 44, 0.8);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .training-header h1 {
+            color: #ffffff;
+            margin-bottom: 0.5rem;
+            font-size: 2.5rem;
+        }
+        
+        .training-header p {
+            color: #a0aec0;
+            font-size: 1.1rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .training-section {
+            margin-bottom: 3rem;
+            background: rgba(26, 32, 44, 0.6);
+            padding: 1.5rem;
+            border-radius: 8px;
+            border-left: 4px solid #4299e1;
+        }
+        
+        .training-section h2 {
+            color: #63b3ed;
+            margin-top: 0;
+            margin-bottom: 1.5rem;
+            font-size: 1.75rem;
+            border-bottom: 1px solid #2d3748;
+            padding-bottom: 0.5rem;
+        }
+        
+        .training-section h3 {
+            color: #90cdf4;
+            margin-top: 1.5rem;
+            margin-bottom: 1rem;
+            font-size: 1.4rem;
+        }
+        
+        .training-section h4 {
+            color: #a0aec0;
+            margin-top: 1.25rem;
+            margin-bottom: 0.75rem;
+            font-size: 1.1rem;
+        }
+        
+        .training-section p, .training-section li {
+            color: #e2e8f0;
+            font-size: 1rem;
+            line-height: 1.7;
+        }
+        
+        .training-section ul, .training-section ol {
+            padding-left: 1.5rem;
+            margin: 1rem 0;
+        }
+        
+        .training-section li {
+            margin-bottom: 0.5rem;
+        }
+        
+        code, pre {
+            font-family: 'Fira Code', monospace;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 4px;
+            padding: 0.2rem 0.4rem;
+            font-size: 0.9em;
+        }
+        
+        pre {
+            padding: 1rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+            border-radius: 6px;
+            position: relative;
+            background: #1e1e1e;
+            border: 1px solid #2d3748;
+        }
+        
+        pre code {
+            background: transparent;
+            padding: 0;
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+        
+        .code-block {
+            position: relative;
+            margin: 1.5rem 0;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .code-header {
+            display: flex;
+            justify-content: flex-end;
+            background: #2d3748;
+            padding: 0.5rem 1rem;
+            border-bottom: 1px solid #1a202c;
+        }
+        
+        .copy-btn {
+            background: #2d3748;
+            color: #a0aec0;
+            border: 1px solid #4a5568;
+            border-radius: 4px;
+            padding: 0.25rem 0.75rem;
+            cursor: pointer;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s ease;
+        }
+        
+        .copy-btn:hover {
+            background: #4a5568;
+            color: #ffffff;
+        }
+        
+        .copy-btn.copied {
+            background: #48bb78;
+            color: white;
+            border-color: #2f855a;
+        }
+        
+        .reward-documentation {
+            background: rgba(26, 32, 44, 0.5);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 1.5rem 0;
+            border-left: 4px solid #4299e1;
+        }
+        
+        .reward-component {
+            margin: 2rem 0;
+            padding: 1.5rem;
+            background: rgba(26, 32, 44, 0.5);
+            border-radius: 8px;
+            border-left: 4px solid #4299e1;
+        }
+        
+        .reward-component h4 {
+            color: #63b3ed;
+            margin-top: 0;
+            font-size: 1.2rem;
+        }
+        
+        .parameters-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            background: rgba(26, 32, 44, 0.7);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .parameters-table th, 
+        .parameters-table td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid #2d3748;
+        }
+        
+        .parameters-table th {
+            background: rgba(26, 32, 44, 0.9);
+            color: #63b3ed;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+        }
+        
+        .parameters-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .parameters-table code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9em;
+            color: #f6ad55;
+        }
+        
+        .tag {
+            display: inline-block;
+            background: rgba(66, 153, 225, 0.2);
+            color: #63b3ed;
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin: 0.2rem;
+            white-space: nowrap;
+        }
+        
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            color: #90cdf4;
+            text-decoration: none;
+            margin-bottom: 1.5rem;
+            transition: color 0.2s ease;
+        }
+        
+        .back-button:hover {
+            color: #63b3ed;
+            text-decoration: underline;
+        }
+        
+        .back-button i {
+            margin-right: 0.5rem;
+        }
+        
+        .component-method {
+            background: rgba(45, 55, 72, 0.5);
+            border-radius: 6px;
+            padding: 1.25rem;
+            margin: 1.25rem 0;
+            border-left: 3px solid #63b3ed;
+        }
+        
+        .component-method h5 {
+            color: #90cdf4;
+            margin-top: 0;
+            margin-bottom: 0.75rem;
+            font-size: 1.05rem;
+            display: flex;
+            align-items: center;
+        }
+        
+        .component-method h5::before {
+            content: '»';
+            color: #63b3ed;
+            margin-right: 0.5rem;
+            font-size: 1.2em;
+        }
+        
+        .component-method ul, .component-method ol {
+            margin: 0.75rem 0 0.5rem 1.5rem;
+            padding-left: 0.5rem;
+        }
+        
+        .component-method li {
+            margin-bottom: 0.4rem;
+            color: #e2e8f0;
+        }
+        
+        .component-method code {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9em;
+            color: #f6ad55;
+        }
+        
+        @media (max-width: 768px) {
+            .training-content {
+                padding: 1.5rem;
+            }
+            
+            .training-header h1 {
+                font-size: 2rem;
+            }
+            
+            .training-header p {
+                font-size: 1rem;
+            }
+            
+            .training-section {
+                padding: 1.25rem;
+            }
+            
+            pre {
+                padding: 0.75rem;
+                font-size: 0.85em;
+            }
+        }
+    </style>
+    <script>
+        // Add copy button to all code blocks
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add copy button to each code block
+            document.querySelectorAll('pre').forEach((codeBlock, index) => {
+                // Create copy button
+                const button = document.createElement('button');
+                button.className = 'copy-btn';
+                button.innerHTML = '<i class="far fa-copy"></i>';
+                button.setAttribute('aria-label', 'Copy code');
+                
+                // Create container for the button
+                const container = document.createElement('div');
+                container.className = 'code-header';
+                container.style.display = 'flex';
+                container.style.justifyContent = 'flex-end';
+                
+                // Insert the button before the pre element
+                const pre = codeBlock.parentNode;
+                if (pre.parentNode) {
+                    pre.parentNode.insertBefore(container, pre);
+                    container.appendChild(button);
+                }
+
+                button.addEventListener('click', function() {
+                    // Create a temporary textarea to copy from
+                    const textarea = document.createElement('textarea');
+                    textarea.value = codeBlock.textContent;
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    
+                    try {
+                        // Copy the text
+                        document.execCommand('copy');
+                        button.innerHTML = '<i class="fas fa-check"></i>';
+                        button.classList.add('copied');
+                        
+                        // Reset button after 2 seconds
+                        setTimeout(function() {
+                            button.innerHTML = '<i class="far fa-copy"></i>';
+                            button.classList.remove('copied');
+                        }, 2000);
+                    } catch (err) {
+                        console.error('Failed to copy text: ', err);
+                    }
+                    
+                    // Clean up
+                    document.body.removeChild(textarea);
+                });
+            });
+        });
+    </script>
+</head>
+<body>
+    <header class="main-header">
+        <div class="container">
+            <nav class="navbar">
+                <a href="../index.html" class="logo">
+                    <img src="https://www.freepnglogos.com/uploads/rocket-league-logo-png/rocket-league-logo-png-1.png" alt="Rocket League Logo" class="rl-logo">
+                    <span>RL Bot Training</span>
+                </a>
+                <button class="hamburger" aria-label="Toggle navigation menu" aria-expanded="false">
+                    <span class="hamburger-box">
+                        <span class="hamburger-inner"></span>
+                    </span>
+                </button>
+                <ul class="nav-links">
+                    <li><a href="../index.html">Home</a></li>
+                    <li><a href="../training-packs.html" class="active">Training Packs</a></li>
+                    <li><a href="../bot-tools.html">Bot Tools</a></li>
+                    <li><a href="../tutorials.html">Tutorials</a></li>
+                    <li><a href="../community.html">Community</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <div class="training-background">
+        <section class="section">
+            <div class="container">
+                <a href="../training-packs.html" class="back-button">
+                    <i class="fas fa-arrow-left"></i> Back to Training Packs
+                </a>
+                
+                <div class="training-content">
+                    <div class="training-header">
+                        <h1>Wavedash Reward</h1>
+                        <p>A reward function that encourages effective wavedashing, a key mechanic in Rocket League for maintaining momentum and speed.</p>
+                        
+                        <div class="training-tags">
+                            <span class="tag"><i class="fas fa-robot"></i> RLGym</span>
+                            <span class="tag"><i class="fas fa-star"></i> Reward Function</span>
+                            <span class="tag"><i class="fas fa-bolt"></i> Mechanics</span>
+                            <span class="tag"><i class="fas fa-code"></i> Python</span>
+                        </div>
+                    </div>
+                    
+                    <div class="training-section">
+                        <h2>Overview</h2>
+                        <p>The <code>WavedashReward</code> is a reward function designed to encourage agents to perform wavedashes effectively. Wavedashing is an advanced technique where a player flips into the ground to maintain momentum and speed.</p>
+                        
+                        <div class="reward-documentation">
+                            <h3>How It Works</h3>
+                            <p>The <code>WavedashReward</code> class is designed to reward an agent when it successfully performs a wavedash - a specific maneuver where a player jumps and then flips just as their car touches the ground, providing a quick burst of speed.</p>
+                            
+                            <h4>Core Functionality</h4>
+                            <p>The reward system operates through these key mechanisms:</p>
+                            
+                            <div class="component-method">
+                                <h5>Wavedash Detection</h5>
+                                <p>Identifies a wavedash by checking two conditions:</p>
+                                <ol>
+                                    <li>Transition from airborne to ground contact: <code>car.on_ground and not prev_car.on_ground</code></li>
+                                    <li>Active or recent flip: <code>car.is_flipping or prev_car.is_flipping</code></li>
+                                </ol>
+                                <p>This combination ensures the agent is rewarded specifically for the wavedash maneuver.</p>
+                            </div>
+                            
+                            <div class="component-method">
+                                <h5>Reward Modes</h5>
+                                <p>The class supports two reward calculation methods:</p>
+                                
+                                <h6>Scaled Reward (scale_by_acceleration=True)</h6>
+                                <ul>
+                                    <li>Measures the actual acceleration during the flip</li>
+                                    <li>Normalizes by <code>CAR_MAX_SPEED</code> for values between 0 and 1</li>
+                                    <li>Encourages more effective wavedashes with greater speed boosts</li>
+                                    <li>Formula: <code>acceleration / CAR_MAX_SPEED</code></li>
+                                </ul>
+                                
+                                <h6>Binary Reward (scale_by_acceleration=False)</h6>
+                                <ul>
+                                    <li>Simple 1 for success, 0 otherwise</li>
+                                    <li>Useful for initial training phases</li>
+                                    <li>Less informative but more stable</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="component-method">
+                                <h5>State Management</h5>
+                                <p>The class efficiently tracks necessary state between frames:</p>
+                                <ul>
+                                    <li>Stores previous game state for comparison</li>
+                                    <li>Maintains acceleration values per agent</li>
+                                    <li>Automatically resets at the start of each episode</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="component-method">
+                                <h5>Wavedash Detection</h5>
+                                <p>The reward function detects a wavedash when:</p>
+                                <pre><code class="language-python">wavedash = ((car.on_ground and not prev_car.on_ground)
+        and (car.is_flipping or prev_car.is_flipping))</code></pre>
+                                <p>This checks for the transition from air to ground while a flip is active.</p>
+                            </div>
+                            
+                            <div class="component-method">
+                                <h5>Reward Calculation</h5>
+                                <p>When <code>scale_by_acceleration</code> is <code>True</code>:</p>
+                                <ul>
+                                    <li>Measures the velocity change during the flip</li>
+                                    <li>Stores the maximum acceleration</li>
+                                    <li>Applies the reward when the wavedash is detected</li>
+                                    <li>Normalizes the reward by <code>CAR_MAX_SPEED</code></li>
+                                </ul>
+                                <p>When <code>scale_by_acceleration</code> is <code>False</code>:</p>
+                                <ul>
+                                    <li>Provides a fixed reward of 1 for any successful wavedash</li>
+                                    <li>No reward otherwise</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="training-section">
+                        <h2>Implementation</h2>
+                        <p>Here's the complete implementation of the Wavedash Reward function:</p>
+                        
+                        <div class="code-block">
+                            <pre><code class="language-python">from typing import Any, Dict, List
+
+import numpy as np
+from rlgym.api import RewardFunction, AgentID
+from rlgym.rocket_league.api import GameState
+from rlgym.rocket_league.common_values import CAR_MAX_SPEED
+
+
+class WavedashReward(RewardFunction[AgentID, GameState, float]):
+    def __init__(self, scale_by_acceleration: bool = True):
+        """
+        Reward function for wavedashing in Rocket League.
+        
+        Args:
+            scale_by_acceleration: If True, rewards are scaled by the acceleration
+                                 achieved during the wavedash. If False, gives
+                                 a fixed reward of 1 for any successful wavedash.
+        """
+        self.scale_by_acceleration = scale_by_acceleration
+        self.prev_state = None
+        self.prev_acceleration = None
+
+    def reset(self, agents: List[AgentID], initial_state: GameState, 
+              shared_info: Dict[str, Any]) -> None:
+        """Reset the reward function for a new episode."""
+        self.prev_state = initial_state
+        self.prev_acceleration = {agent: 0 for agent in agents}
+
+    def get_rewards(self, agents: List[AgentID], state: GameState, 
+                   is_terminated: Dict[AgentID, bool],
+                   is_truncated: Dict[AgentID, bool], 
+                   shared_info: Dict[str, Any]) -> Dict[AgentID, float]:
+        """
+        Calculate rewards for all agents based on wavedash performance.
+        
+        Returns:
+            Dictionary mapping agent IDs to their respective rewards.
+        """
+        rewards = {}
+        for agent in agents:
+            car = state.cars[agent]
+            prev_car = self.prev_state.cars[agent]
+
+            # Detect wavedash: transition from air to ground while flipping
+            wavedash = ((car.on_ground and not prev_car.on_ground)
+                       and (car.is_flipping or prev_car.is_flipping))
+
+            if self.scale_by_acceleration:
+                # Measure acceleration at the start of the flip
+                if car.is_flipping and not prev_car.is_flipping:
+                    acc = np.linalg.norm(car.physics.linear_velocity - 
+                                       prev_car.physics.linear_velocity)
+                    self.prev_acceleration[agent] = acc
+                
+                # Apply reward when wavedash is detected
+                if wavedash:
+                    acc = self.prev_acceleration[agent]
+                    rewards[agent] = acc / CAR_MAX_SPEED
+                    self.prev_acceleration[agent] = 0
+                else:
+                    rewards[agent] = 0
+                    # Reset acceleration if not flipping anymore
+                    if not car.is_flipping:
+                        self.prev_acceleration[agent] = 0
+            else:
+                # Simple binary reward for any successful wavedash
+                rewards[agent] = 1 if wavedash else 0
+                
+        self.prev_state = state
+        return rewards</code></pre>
+                        </div>
+                    </div>
+                    
+                    <div class="training-section">
+                        <h2>Usage Examples</h2>
+                        
+                        <div class="reward-component">
+                            <h4>Basic Usage</h4>
+                            <p>Here's how to use the WavedashReward with default settings:</p>
+                            <div class="code-block">
+                                <pre><code class="language-python">from rlgym.envs import make
+from wavedash_reward import WavedashReward
+
+# Create environment with WavedashReward
+env = make(
+    reward_fn=WavedashReward(scale_by_acceleration=True),
+    # ... other environment parameters
+)
+
+# Standard RL training loop
+obs = env.reset()
+done = False
+while not done:
+    actions = {}  # Get actions from your policy
+    next_obs, rewards, dones, infos = env.step(actions)
+    # ... training code here</code></pre>
+                            </div>
+                        </div>
+                        
+                        <div class="reward-component">
+                            <h4>Combining with Other Rewards</h4>
+                            <p>You can combine WavedashReward with other rewards using RLGym's reward composition:</p>
+                            <div class="code-block">
+                                <pre><code class="language-python">from rlgym.envs import make
+from rlgym.rewards import CombinedReward
+from wavedash_reward import WavedashReward
+from some_other_rewards import VelocityReward, TouchBallReward
+
+# Create a combined reward function
+combined_reward = CombinedReward(
+    (WavedashReward(scale_by_acceleration=True), 0.5),
+    (VelocityReward(), 0.3),
+    (TouchBallReward(), 0.2)
+)
+
+# Create environment with combined rewards
+env = make(
+    reward_fn=combined_reward,
+    # ... other environment parameters
+)</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="training-section">
+                        <h2>Best Practices</h2>
+                        
+                        <div class="reward-component">
+                            <h4>When to Use</h4>
+                            <ul>
+                                <li><strong>Mechanics Training</strong>: Teaching agents advanced movement techniques</li>
+                                <li><strong>Speed Maintenance</strong>: Encouraging efficient movement around the field</li>
+                                <li><strong>Recovery Training</strong>: Improving agent recovery after challenges</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="reward-component">
+                            <h4>Tips for Training</h4>
+                            <ul>
+                                <li>Start with <code>scale_by_acceleration=True</code> to encourage powerful wavedashes</li>
+                                <li>Combine with other rewards for balanced training</li>
+                                <li>Use a shaped reward curriculum, increasing the wavedash reward weight over time</li>
+                                <li>Monitor agent behavior to ensure proper wavedash execution</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="training-section">
+                        <h2>Advanced Topics</h2>
+                        
+                        <div class="reward-component">
+                            <h4>Custom Wavedash Detection</h4>
+                            <p>You can subclass <code>WavedashReward</code> to implement custom detection logic:</p>
+                            <div class="code-block">
+                                <pre><code class="language-python">class CustomWavedashReward(WavedashReward):
+    def get_rewards(self, agents, state, is_terminated, is_truncated, shared_info):
+        rewards = {}
+        for agent in agents:
+            car = state.cars[agent]
+            prev_car = self.prev_state.cars[agent]
+            
+            # Custom detection logic
+            velocity = np.linalg.norm(car.physics.linear_velocity)
+            prev_velocity = np.linalg.norm(prev_car.physics.linear_velocity)
+            speed_increase = velocity > prev_velocity * 1.2  # 20% speed increase
+            
+            # Your custom wavedash detection
+            custom_wavedash = (car.on_ground and not prev_car.on_ground and
+                             car.is_flipping and speed_increase)
+            
+            rewards[agent] = 1 if custom_wavedash else 0
+            
+        self.prev_state = state
+        return rewards</code></pre>
+                            </div>
+                        </div>
+                        
+                        <div class="reward-component">
+                            <h4>Performance Considerations</h4>
+                            <ul>
+                                <li><strong>State Tracking</strong>: The class maintains minimal state between steps</li>
+                                <li><strong>Vectorization</strong>: Consider vectorized operations for multi-agent environments</li>
+                                <li><strong>Debugging</strong>: Add logging for wavedash events during development</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <footer class="main-footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Join Our Community</h3>
+                    <p>Connect with other bot developers and share your projects</p>
+                    <div class="social-links">
+                        <a href="https://github.com/RLBot/RLBot" target="_blank" rel="noopener noreferrer" aria-label="GitHub"><i class="fab fa-github"></i> RLBot GitHub</a>
+                        <a href="https://github.com/dxkku" target="_blank" rel="noopener noreferrer" aria-label="GitHub"><i class="fab fa-github"></i> My GitHub</a>
+                        <a href="https://discord.gg/fkG77fPmCd" target="_blank" rel="noopener noreferrer" aria-label="Discord"><i class="fab fa-discord"></i> Discord</a>
+                        <a href="https://www.reddit.com/r/RocketLeagueBots/" target="_blank" rel="noopener noreferrer" aria-label="Reddit"><i class="fab fa-reddit"></i> Reddit</a>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="../index.html">Home</a></li>
+                        <li><a href="../training-packs.html">Training Packs</a></li>
+                        <li><a href="../bot-tools.html">Bot Tools</a></li>
+                        <li><a href="../tutorials.html">Tutorials</a></li>
+                        <li><a href="../community.html">Community</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Rocket League Bot Training. Not affiliated with Psyonix or Epic Games.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../script.js"></script>
+</body>
+</html>
