@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Ball Travel Reward - Reward function for ball movement and passing in RLGym">
     <title>Rocket League Bot Training | Ball Travel Reward</title>
-    <link rel="icon" type="image/png" href="https://www.freepnglogos.com/uploads/rocket-league-logo-png/rocket-league-logo-png-1.png">
+    <link rel="icon" type="image/png" href="../logs/rltb.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../style.css">
@@ -57,21 +57,6 @@
         });
     </script>
     <style>
-        /* Existing styles from demo-reward.html */
-        pre {
-            margin: 0;
-            padding: 0;
-            background: none;
-            font-family: 'Fira Code', 'Courier New', monospace;
-            white-space: pre;
-            word-wrap: normal;
-        }
-        
-        code {
-            font-family: 'Fira Code', 'Courier New', monospace;
-            font-size: 0.95rem;
-        }
-        
         .training-content {
             max-width: 1200px;
             margin: 0 auto;
@@ -79,6 +64,8 @@
             background: rgba(26, 32, 44, 0.9);
             border-radius: 8px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            color: #ffffff;
+            line-height: 1.6;
         }
         
         .training-background {
@@ -86,8 +73,106 @@
                         url('https://images.unsplash.com/photo-1569505840673-3f5b24b6c1d9?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80');
             background-size: cover;
             background-position: center;
-            padding: 4rem 0;
-            margin-top: -1rem;
+            padding: 4rem 2rem;
+        }
+        
+        .training-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 2rem;
+            background: rgba(26, 32, 44, 0.8);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .training-header h1 {
+            color: #ffffff;
+            margin-bottom: 0.5rem;
+            font-size: 2.5rem;
+        }
+        
+        .training-header p {
+            color: #a0aec0;
+            font-size: 1.1rem;
+            max-width: 800px;
+            margin: 0 auto 1.5rem;
+        }
+        
+        .training-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+        
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            background: rgba(66, 153, 225, 0.2);
+            color: #90cdf4;
+            padding: 0.3rem 0.8rem;
+            border-radius: 9999px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        
+        .tag i {
+            font-size: 0.8em;
+        }
+        
+        .tag:hover {
+            background: rgba(66, 153, 225, 0.3);
+            transform: translateY(-1px);
+        }
+        
+        .training-section {
+            margin-bottom: 3rem;
+            background: rgba(26, 32, 44, 0.6);
+            padding: 1.5rem;
+            border-radius: 8px;
+            border-left: 4px solid #4299e1;
+        }
+        
+        .training-section h2 {
+            color: #63b3ed;
+            margin-top: 0;
+            margin-bottom: 1.5rem;
+            font-size: 1.75rem;
+            border-bottom: 1px solid #2d3748;
+            padding-bottom: 0.5rem;
+        }
+        
+        .training-section h3 {
+            color: #90cdf4;
+            margin-top: 1.5rem;
+            margin-bottom: 1rem;
+            font-size: 1.4rem;
+        }
+        
+        .training-section h4 {
+            color: #a0aec0;
+            margin-top: 1.25rem;
+            margin-bottom: 0.75rem;
+            font-size: 1.1rem;
+        }
+        
+        .training-section p, .training-section li {
+            color: #e2e8f0;
+            font-size: 1rem;
+            line-height: 1.7;
+        }
+        
+        .training-section ul, .training-section ol {
+            padding-left: 1.5rem;
+            margin: 1rem 0;
+        }
+        
+        .training-section li {
+            margin-bottom: 0.5rem;
         }
         
         .back-button {
@@ -110,22 +195,7 @@
             border-left: 4px solid #3b82f6;
             padding: 1.5rem;
             margin: 1.5rem 0;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-        
-        .training-section h2 {
-            color: #63b3ed;
-            margin: 2.5rem 0 1.5rem 0;
-            padding-bottom: 0.5rem;
-            border-bottom: 2px solid #2c5282;
-            font-weight: 600;
-            font-size: 1.75rem;
-        }
-        
-        .code-section {
-            margin: 2.5rem 0;
-            position: relative;
+            border-radius: 0 8px 8px 0;
         }
         
         .code-block {
@@ -163,30 +233,53 @@
             font-weight: 500;
         }
         
-        .training-section p, .training-section li {
-            color: #e2e8f0;
-            line-height: 1.8;
-            margin-bottom: 1.2rem;
-            font-size: 1.05rem;
+        .parameters-table tr:last-child td {
+            border-bottom: none;
         }
         
-        .training-section h3 {
-            color: #90cdf4;
-            margin: 2rem 0 1rem 0;
-            font-weight: 500;
-            font-size: 1.4rem;
-            position: relative;
-            padding-left: 1rem;
-            border-left: 3px solid #3b82f6;
+        pre {
+            margin: 0;
+            padding: 0;
+            background: none;
+            font-family: 'Fira Code', 'Courier New', monospace;
+            white-space: pre;
+            word-wrap: normal;
         }
         
-        .training-section ul, .training-section ol {
-            margin: 1.2rem 0;
-            padding-left: 1.5rem;
+        code {
+            font-family: 'Fira Code', 'Courier New', monospace;
+            font-size: 0.95rem;
         }
         
-        .training-section li {
-            margin-bottom: 0.5rem;
+        @media (max-width: 768px) {
+            .training-content {
+                padding: 1rem;
+            }
+            
+            .training-header {
+                padding: 1.5rem 1rem;
+            }
+            
+            .training-header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .training-section {
+                padding: 1rem;
+            }
+            
+            .training-section h2 {
+                font-size: 1.5rem;
+            }
+            
+            .training-section h3 {
+                font-size: 1.25rem;
+            }
+            
+            .code-block {
+                padding: 1rem;
+                font-size: 0.9rem;
+            }
         }
     </style>
 </head>
@@ -195,21 +288,20 @@
         <div class="container">
             <nav class="navbar">
                 <a href="../index.html" class="logo">
-                    <img src="../images/logo.png" alt="LarryBot Logo" class="logo-img">
-                    <span class="logo-text">LarryBot</span>
+                    <img src="../logs/rltb.png" alt="RL Bot Training Logo" class="logo-img" style="height: 40px; width: auto;">
                 </a>
+                <button class="hamburger" aria-label="Toggle navigation menu" aria-expanded="false">
+                    <span class="hamburger-box">
+                        <span class="hamburger-inner"></span>
+                    </span>
+                </button>
                 <ul class="nav-links">
                     <li><a href="../index.html">Home</a></li>
-                    <li><a href="../bot-tools.html">Bot Tools</a></li>
                     <li><a href="../training-packs.html" class="active">Training Packs</a></li>
+                    <li><a href="../bot-tools.html">Bot Tools</a></li>
                     <li><a href="../tutorials.html">Tutorials</a></li>
                     <li><a href="../community.html">Community</a></li>
                 </ul>
-                <div class="hamburger">
-                    <div class="line"></div>
-                    <div class="line"></div>
-                    <div class="line"></div>
-                </div>
             </nav>
         </div>
     </header>
@@ -225,12 +317,11 @@
                     <div class="training-header">
                         <h1>Ball Travel Reward</h1>
                         <p>A sophisticated reward function that rewards agents based on the distance the ball travels between touches, with configurable weights for different types of ball movements.</p>
-                        
                         <div class="training-tags">
                             <span class="tag"><i class="fas fa-tag"></i> RLGym</span>
-                            <span class="fas fa-futbol"> Ball Control</span>
-                            <span class="fas fa-robot"> AI Training</span>
-                            <span class="fas fa-code"> Python</span>
+                            <span class="tag"><i class="fas fa-futbol"></i> Ball Control</span>
+                            <span class="tag"><i class="fas fa-robot"></i> AI Training</span>
+                            <span class="tag"><i class="fas fa-code"></i> Python</span>
                         </div>
                     </div>
                     
